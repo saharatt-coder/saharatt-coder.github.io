@@ -1,0 +1,1686 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Calculus Museum AR · พิพิธภัณฑ์แคลคูลัส · by Dr.Saharat Tabonglek</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{ --cyan:#22e4ff; --violet:#8b6cff; --mag:#ff4fd8; --green:#3dff9a; --amber:#ffb547; --ink:#eef6ff; --dim:#8b9cc4;
+    --sans:'Space Grotesk','IBM Plex Sans Thai',system-ui,sans-serif; --mono:'JetBrains Mono','IBM Plex Sans Thai',monospace; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{width:100%;height:100%;overflow:hidden;background:#04040f;color:var(--ink);font-family:var(--sans)}
+  video{position:fixed;left:-9999px;top:0;width:320px;height:240px;opacity:0;pointer-events:none}
+  canvas{position:fixed;inset:0;display:block;touch-action:none}
+  .glass{background:linear-gradient(180deg,rgba(16,20,48,.82),rgba(8,10,28,.9));border:1px solid rgba(34,228,255,.3);border-radius:14px;
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);box-shadow:0 10px 40px rgba(0,0,0,.45),0 0 30px rgba(139,108,255,.18)}
+  #status{pointer-events:none;position:fixed;left:50%;bottom:14px;transform:translateX(-50%);padding:9px 18px;font-size:15px;color:var(--amber);display:none;max-width:90vw;text-align:center;z-index:5}
+  #toast{position:fixed;left:50%;top:40%;transform:translate(-50%,-50%) scale(.92);padding:22px 36px;text-align:center;opacity:0;transition:all .3s cubic-bezier(.2,.9,.3,1.3);pointer-events:none;z-index:6;max-width:86vw}
+  #toast.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+  #toast h2{font-size:46px;font-weight:700;letter-spacing:-.01em}
+  #toast p{font-size:21px;margin-top:6px}
+
+  /* ---------- hero ---------- */
+  #startOv{position:fixed;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#04040f}
+  #startOv::before{content:"";position:absolute;inset:-20%;
+    background:radial-gradient(40% 40% at 25% 30%,rgba(34,228,255,.30),transparent 70%),
+               radial-gradient(35% 35% at 75% 25%,rgba(139,108,255,.36),transparent 70%),
+               radial-gradient(40% 40% at 55% 85%,rgba(255,79,216,.24),transparent 70%);
+    filter:blur(20px);animation:aur 14s ease-in-out infinite alternate}
+  @keyframes aur{to{transform:translate(4%,-3%) rotate(8deg) scale(1.08)}}
+  .floor{position:absolute;left:-50%;right:-50%;bottom:-12%;height:55%;
+    background-image:linear-gradient(rgba(34,228,255,.35) 1px,transparent 1px),linear-gradient(90deg,rgba(34,228,255,.35) 1px,transparent 1px);
+    background-size:70px 70px;transform:perspective(500px) rotateX(62deg);transform-origin:center top;
+    -webkit-mask-image:linear-gradient(transparent,#000 70%);mask-image:linear-gradient(transparent,#000 70%);animation:fl 3s linear infinite}
+  @keyframes fl{to{background-position:0 70px}}
+  .ring{position:absolute;left:50%;top:40%;border:1px solid rgba(34,228,255,.28);border-radius:50%;transform:translate(-50%,-50%) rotateX(72deg);pointer-events:none}
+  .r1{width:min(900px,92vw);height:min(900px,92vw);animation:spin 26s linear infinite}
+  .r2{width:min(640px,70vw);height:min(640px,70vw);border-color:rgba(255,79,216,.3);animation:spin 17s linear infinite reverse}
+  @keyframes spin{to{transform:translate(-50%,-50%) rotateX(72deg) rotateZ(360deg)}}
+  .hero{position:relative;text-align:center;padding:0 24px;max-width:1040px}
+  .kicker{font-family:var(--mono);font-size:14px;letter-spacing:.38em;color:var(--cyan)}
+  .hero h1{font-size:clamp(56px,10vw,132px);font-weight:700;line-height:.9;letter-spacing:-.035em;margin:20px 0 14px}
+  .hero h1 .g{background:linear-gradient(90deg,var(--cyan),var(--violet) 50%,var(--mag));-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 30px rgba(139,108,255,.5))}
+  .hero h1 .o{color:transparent;-webkit-text-stroke:1.5px rgba(238,246,255,.9)}
+  .hero .sub{font-size:21px;color:var(--dim);margin-bottom:28px}
+  .how{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:36px}
+  .how span{font-size:16px;padding:10px 18px;border-radius:999px;border:1px solid rgba(34,228,255,.3);background:rgba(10,14,36,.6);backdrop-filter:blur(6px)}
+  .how b{color:var(--cyan);font-family:var(--mono);margin-right:8px}
+  #goBtn{font-family:var(--sans);font-size:22px;font-weight:700;color:#04040f;padding:18px 46px;border:0;border-radius:999px;cursor:pointer;
+    background:linear-gradient(90deg,var(--cyan),var(--violet),var(--mag),var(--cyan));background-size:300% 100%;animation:sh 6s linear infinite;
+    box-shadow:0 0 40px rgba(139,108,255,.6);transition:transform .2s}
+  @keyframes sh{to{background-position:300% 0}}
+  #goBtn:hover{transform:translateY(-3px) scale(1.03)}
+  .credit{margin-top:44px;font-size:15px;color:var(--dim);line-height:1.7}
+  .credit b{font-size:19px;background:linear-gradient(90deg,var(--cyan),var(--mag));-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:700}
+
+  /* ---------- feedback DOM ---------- */
+  #fbDom{position:fixed;z-index:4;display:none}
+  #fbDom textarea{width:100%;height:118px;resize:none;font-family:var(--sans);font-size:17px;line-height:1.5;color:var(--ink);padding:12px 14px;border-radius:12px;
+    border:1px solid rgba(34,228,255,.35);background:rgba(6,8,24,.88);outline:none}
+  #plDom{position:fixed;z-index:4;display:none}
+  #plDom input{width:100%;font-family:var(--sans);font-size:20px;color:var(--ink);padding:14px 16px;border-radius:12px;border:1px solid rgba(34,228,255,.35);background:rgba(6,8,24,.88);outline:none}
+  #plDom input:focus{border-color:var(--mag);box-shadow:0 0 18px rgba(255,79,216,.35)}
+  #fbDom textarea:focus{border-color:var(--mag);box-shadow:0 0 18px rgba(255,79,216,.35)}
+  #qrWrap{margin-top:14px;display:none;align-items:center;gap:16px}
+  #qrBox{background:#fff;padding:8px;border-radius:12px;width:136px;height:136px;flex:none}
+  #qrBox img,#qrBox canvas{width:120px!important;height:120px!important}
+  #qrWrap p{font-size:15px;color:var(--dim);line-height:1.55}
+</style>
+</head>
+<body>
+<video id="cam" playsinline muted></video>
+<canvas id="cv"></canvas>
+<div id="status" class="glass"></div>
+<div id="toast" class="glass"><h2 id="tTitle"></h2><p id="tMsg"></p></div>
+<div id="fbDom">
+  <textarea id="fbMsg" maxlength="300" placeholder="พิมพ์ข้อความถึงผู้พัฒนา (ไม่บังคับ)"></textarea>
+  <div id="qrWrap"><div id="qrBox"></div><p>สแกนเพื่อเขียน<br>ความคิดเห็นแบบยาว<br>ผ่านมือถือ</p></div>
+</div>
+
+<div id="plDom"><input id="plName" maxlength="24" placeholder="ชื่อทีม (ไม่บังคับ) เช่น ทีมอินฟินิตี้"></div>
+
+<div id="startOv">
+  <div class="floor"></div><div class="ring r1"></div><div class="ring r2"></div>
+  <div class="hero">
+    <div class="kicker">AR LEARNING EXPERIENCE · ค 32202</div>
+    <h1><span class="g">CALCULUS</span><br><span class="o">MUSEUM</span></h1>
+    <div class="sub">พิพิธภัณฑ์แคลคูลัสแบบ AR — เรียนลิมิต อนุพันธ์ และอินทิกรัลด้วยมือและร่างกายของคุณ</div>
+    <div class="how">
+      <span><b>01</b>☝️ ชี้ค้าง 1 วินาที = กด</span>
+      <span><b>02</b>🤏 จีบนิ้ว = กดทันที / วาด</span>
+      <span><b>03</b>✋ แบมือค้าง = ลบ</span>
+    </div>
+    <button id="goBtn">เริ่มประสบการณ์ &nbsp;→</button>
+    <div class="credit">พัฒนาโดย<br><b>Dr.Saharat Tabonglek</b><br>โรงเรียนสุรวิวัฒน์ มหาวิทยาลัยเทคโนโลยีสุรนารี</div>
+  </div>
+</div>
+
+<script type="module">
+// ================================================================
+//  CORE
+// ================================================================
+// ===================== ตั้งค่า (แก้ได้) =====================
+const CONFIG = {
+  DEVELOPER: 'Dr.Saharat Tabonglek',
+  ORG: 'โรงเรียนสุรวิวัฒน์ มหาวิทยาลัยเทคโนโลยีสุรนารี',
+  // วาง URL ของ Google Apps Script Web App (จากไฟล์ feedback-collector.gs) เพื่อรวม feedback + คะแนนจากทุกเครื่องลง Google Sheet
+  FEEDBACK_URL: '',
+  // (ไม่บังคับ) ลิงก์ Google Form สำหรับความคิดเห็นยาว ๆ — จะแสดงเป็น QR code ในหน้าให้กำลังใจ
+  FEEDBACK_FORM_URL: '',
+  // ห้องที่ให้เลือกตอนเริ่มเล่น (แก้ได้)
+  ROOMS: ['ม.5/1', 'ม.5/2', 'ม.5/3'],
+  TEAMS: 10,
+  // (ไม่บังคับ) รหัสเข้าโหมดครู — เว้นว่าง = กด T แล้วเข้าได้เลย
+  TEACHER_PIN: '',
+  VERSION: 'v2.3 · 19 พ.ย. 2569',
+};
+// =============================================================
+const $ = id => document.getElementById(id);
+const cv = $('cv'), ctx = cv.getContext('2d');
+const video = $('cam');
+let W = 0, H = 0;
+function resize(){
+  const dpr = window.devicePixelRatio || 1;
+  W = innerWidth; H = innerHeight;
+  cv.width = W*dpr; cv.height = H*dpr; cv.style.width = W+'px'; cv.style.height = H+'px';
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+}
+addEventListener('resize', resize); resize();
+
+const C = {cyan:'#22e4ff', violet:'#8b6cff', mag:'#ff4fd8', green:'#3dff9a', amber:'#ffb547', red:'#ff4d6d', ink:'#eef6ff', dim:'#8b9cc4'};
+const FONT = "'Space Grotesk', 'IBM Plex Sans Thai', system-ui, sans-serif";
+const MONO = "'JetBrains Mono', 'IBM Plex Sans Thai', monospace";
+if (document.fonts) ['700 40px "Space Grotesk"','400 20px "IBM Plex Sans Thai"','700 20px "IBM Plex Sans Thai"','600 16px "JetBrains Mono"'].forEach(f => document.fonts.load(f).catch(()=>{}));
+function hexA(hex, a){ if (!hex || hex[0] !== '#') return hex; const n = parseInt(hex.slice(1), 16); return `rgba(${n>>16&255},${n>>8&255},${n&255},${a})`; }
+const fmt = (v,d=2) => (v === null || v === undefined || isNaN(v)) ? '–' : ((v < 0 && Math.abs(v) >= 0.5*10**-d) ? '−' : '') + Math.abs(v).toFixed(d);
+const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
+const lerp = (a,b,t) => a + (b-a)*t;
+
+// ---------- drawing helpers ----------
+function rr(x,y,w,h,r){ ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(x,y,w,h,r); else ctx.rect(x,y,w,h); }
+function glass(x,y,w,h,{r=14, border=null, fill=null, brackets=true, accent=null}={}){
+  ctx.save();
+  rr(x,y,w,h,r);
+  if (fill){ ctx.fillStyle = fill; }
+  else { const g = ctx.createLinearGradient(x,y,x,y+h); g.addColorStop(0,'rgba(18,22,52,.78)'); g.addColorStop(1,'rgba(7,9,26,.86)'); ctx.fillStyle = g; }
+  ctx.fill();
+  let bs;
+  if (border){ bs = border; }
+  else { bs = ctx.createLinearGradient(x,y,x+w,y+h); bs.addColorStop(0,'rgba(34,228,255,.55)'); bs.addColorStop(.5,'rgba(139,108,255,.22)'); bs.addColorStop(1,'rgba(255,79,216,.45)'); }
+  ctx.strokeStyle = bs; ctx.lineWidth = 1.2; ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(x+r, y+1); ctx.lineTo(x+w-r, y+1); ctx.strokeStyle = 'rgba(255,255,255,.10)'; ctx.lineWidth = 1; ctx.stroke();
+  if (brackets && w > 60 && h > 40){
+    const L = Math.min(16, w/6, h/4), c = accent || (border && border[0] === '#' ? border : C.cyan), o = 5;
+    ctx.strokeStyle = c; ctx.lineWidth = 2; ctx.shadowColor = c; ctx.shadowBlur = 8; ctx.lineCap = 'round';
+    for (const [px,py,sx,sy] of [[x,y,1,1],[x+w,y,-1,1],[x,y+h,1,-1],[x+w,y+h,-1,-1]]){
+      ctx.beginPath(); ctx.moveTo(px+sx*o, py+sy*(o+L)); ctx.lineTo(px+sx*o, py+sy*o); ctx.lineTo(px+sx*(o+L), py+sy*o); ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
+function chip(x,y,label,col){
+  ctx.save(); ctx.font = `600 13px ${MONO}`; const w = ctx.measureText(label).width + 26; ctx.restore();
+  rr(x,y,w,26,13); ctx.save(); ctx.fillStyle = hexA(col,.14); ctx.fill(); ctx.strokeStyle = hexA(col,.7); ctx.lineWidth = 1; ctx.stroke(); ctx.restore();
+  txt(label, x+13, y+18, {size:13, weight:600, color:col, font:'mono'}); return w;
+}
+function txt(s,x,y,{size=20,weight=400,color=C.ink,align='left',glow=0,base='alphabetic',maxW,font,ls}={}){
+  ctx.save(); ctx.font = `${weight} ${size}px ${font === 'mono' ? MONO : FONT}`; if (ls && 'letterSpacing' in ctx) ctx.letterSpacing = ls + 'px'; ctx.fillStyle = color; ctx.textAlign = align; ctx.textBaseline = base;
+  if (glow){ ctx.shadowColor = color; ctx.shadowBlur = glow; }
+  if (maxW) ctx.fillText(s, x, y, maxW); else ctx.fillText(s, x, y); ctx.restore();
+}
+function line(x1,y1,x2,y2){ ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke(); }
+function glowLine(x1,y1,x2,y2,color,w,blur,dash){
+  ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = w; ctx.shadowColor = color; ctx.shadowBlur = blur; ctx.lineCap = 'round';
+  if (dash) ctx.setLineDash(dash); line(x1,y1,x2,y2); ctx.restore();
+}
+function dot(x,y,r,color,blur=20){ ctx.save(); ctx.fillStyle = color; ctx.shadowColor = color; ctx.shadowBlur = blur; ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill(); ctx.restore(); }
+function ring(x,y,r,color,w=2,frac=1){ ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = w; ctx.shadowColor = color; ctx.shadowBlur = 12; ctx.beginPath(); ctx.arc(x,y,r,-Math.PI/2,-Math.PI/2+Math.PI*2*frac); ctx.stroke(); ctx.restore(); }
+function meter(x,y,w,h,frac,label){
+  frac = clamp(frac||0, 0, 1);
+  ctx.save(); rr(x,y,w,h,h/2); ctx.fillStyle = 'rgba(255,255,255,.07)'; ctx.fill();
+  if (frac > 0){
+    const g = ctx.createLinearGradient(x,0,x+w,0); g.addColorStop(0,C.red); g.addColorStop(.55,C.amber); g.addColorStop(1,C.green);
+    rr(x,y,Math.max(h, w*frac),h,h/2); ctx.fillStyle = g; ctx.shadowColor = frac > .8 ? C.green : C.amber; ctx.shadowBlur = 12; ctx.fill();
+  }
+  ctx.restore();
+  ctx.save(); ctx.strokeStyle = 'rgba(4,4,15,.65)'; ctx.lineWidth = 2; for (let k=1;k<10;k++) line(x+w*k/10, y, x+w*k/10, y+h); ctx.restore();
+  if (label) txt(label, x, y-9, {size:13, color:C.dim, font:'mono'});
+}
+
+// ---------- plots ----------
+function Plot(r, xr, yr){
+  return { r, xr, yr,
+    sx: x => r.x + (x - xr[0])/(xr[1]-xr[0])*r.w,
+    sy: y => r.y + r.h - (y - yr[0])/(yr[1]-yr[0])*r.h,
+    mx: s => xr[0] + (s - r.x)/r.w*(xr[1]-xr[0]),
+    my: s => yr[0] + (r.y + r.h - s)/r.h*(yr[1]-yr[0]) };
+}
+function drawAxes(p, {xstep=1, ystep=1, panel=true, xlabel='x', ylabel='y', labelEvery=1}={}){
+  const {r, xr, yr} = p;
+  ctx.save();
+  if (panel){ ctx.fillStyle = 'rgba(5,10,30,.38)'; ctx.fillRect(r.x, r.y, r.w, r.h); }
+  ctx.beginPath(); ctx.rect(r.x, r.y, r.w, r.h); ctx.clip();
+  ctx.strokeStyle = 'rgba(46,242,255,.10)'; ctx.lineWidth = 1;
+  const k0 = Math.ceil(xr[0]/xstep - 1e-9), k1 = Math.floor(xr[1]/xstep + 1e-9);
+  const j0 = Math.ceil(yr[0]/ystep - 1e-9), j1 = Math.floor(yr[1]/ystep + 1e-9);
+  for (let k=k0;k<=k1;k++){ const s = p.sx(k*xstep); line(s, r.y, s, r.y+r.h); }
+  for (let j=j0;j<=j1;j++){ const s = p.sy(j*ystep); line(r.x, s, r.x+r.w, s); }
+  const ax = clamp(p.sy(0), r.y, r.y+r.h), ay = clamp(p.sx(0), r.x, r.x+r.w);
+  ctx.strokeStyle = 'rgba(46,242,255,.6)'; ctx.lineWidth = 2; ctx.shadowColor = C.cyan; ctx.shadowBlur = 8;
+  line(r.x, ax, r.x+r.w, ax); line(ay, r.y, ay, r.y+r.h);
+  ctx.shadowBlur = 0; ctx.fillStyle = 'rgba(180,230,255,.7)'; ctx.font = `13px ${FONT}`;
+  ctx.textAlign = 'center';
+  for (let k=k0;k<=k1;k++){ if (k === 0 || k % labelEvery) continue; const v = +(k*xstep).toFixed(4); ctx.fillText(fmt(v, Number.isInteger(v)?0:2), p.sx(v), ax+17); }
+  ctx.textAlign = 'right';
+  for (let j=j0;j<=j1;j++){ if (j === 0 || j % labelEvery) continue; const v = +(j*ystep).toFixed(4); ctx.fillText(fmt(v, Number.isInteger(v)?0:2), ay-6, p.sy(v)+5); }
+  ctx.restore();
+}
+function strokeFn(p, f, color, w=5, {from, to, dash, blur=20, step}={}){
+  const a = from ?? p.xr[0], b = to ?? p.xr[1], st = step ?? (p.xr[1]-p.xr[0])/600;
+  const lim = (p.yr[1]-p.yr[0])*2;
+  ctx.save(); ctx.beginPath(); ctx.rect(p.r.x, p.r.y, p.r.w, p.r.h); ctx.clip();
+  ctx.strokeStyle = color; ctx.lineWidth = w; ctx.shadowColor = color; ctx.shadowBlur = blur; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  if (dash) ctx.setLineDash(dash);
+  ctx.beginPath(); let pen = false;
+  for (let x=a; x<=b+1e-9; x+=st){
+    const y = f(x);
+    if (!isFinite(y) || y < p.yr[0]-lim || y > p.yr[1]+lim){ pen = false; continue; }
+    if (!pen){ ctx.moveTo(p.sx(x), p.sy(y)); pen = true; } else ctx.lineTo(p.sx(x), p.sy(y));
+  }
+  ctx.stroke(); ctx.restore();
+}
+
+// ---------- toast / sound / particles ----------
+function toast(t,msg,color=C.green,ms=3000){
+  $('tTitle').textContent = t; $('tTitle').style.color = color; $('tMsg').textContent = msg || '';
+  $('toast').classList.add('show'); clearTimeout(toast._t); toast._t = setTimeout(()=>$('toast').classList.remove('show'), ms);
+}
+let AC = null;
+function tone(f,t0,dur,type='sine',g=.15){ if(!AC || !AUDIO.sfx) return; try{ const o=AC.createOscillator(), v=AC.createGain(); o.type=type; o.frequency.value=f; o.connect(v); v.connect(AC.destination); const t=AC.currentTime+t0; v.gain.setValueAtTime(0,t); v.gain.linearRampToValueAtTime(g,t+.02); v.gain.exponentialRampToValueAtTime(.001,t+dur); o.start(t); o.stop(t+dur+.05);}catch{} }
+// ---------- background music (generative ambient synth) ----------
+let AUDIO = {music:true, vol:.4, sfx:true};
+try { AUDIO = Object.assign(AUDIO, JSON.parse(localStorage.getItem('calcMuseumAudio.v1') || '{}')); } catch {}
+const saveAudio = () => { try { localStorage.setItem('calcMuseumAudio.v1', JSON.stringify(AUDIO)); } catch {} };
+let MUS = null;
+const mtof = m => 440 * Math.pow(2, (m-69)/12);
+const PROG = [
+  {pad:[57,60,64,67,71], bass:45},   // Am9
+  {pad:[53,57,60,64,69], bass:41},   // Fmaj7
+  {pad:[48,55,59,64,67], bass:48},   // Cmaj7
+  {pad:[55,59,62,64,69], bass:43},   // G6/9
+];
+const ARP = [0,2,4,3,1,3,4,2, 0,3,4,2,1,4,3,2];
+function startMusic(){
+  if (!AC || MUS) return;
+  try{
+    const master = AC.createGain(); master.gain.value = 0; master.connect(AC.destination);
+    const comp = AC.createDynamicsCompressor(); comp.threshold.value = -20; comp.ratio.value = 3; comp.connect(master);
+    const delay = AC.createDelay(1.5), fb = AC.createGain(), dl = AC.createBiquadFilter();
+    delay.delayTime.value = .54; fb.gain.value = .38; dl.type = 'lowpass'; dl.frequency.value = 2400;
+    delay.connect(dl); dl.connect(fb); fb.connect(delay); dl.connect(comp);
+    const padF = AC.createBiquadFilter(); padF.type = 'lowpass'; padF.frequency.value = 950; padF.Q.value = 3; padF.connect(comp);
+    const lfo = AC.createOscillator(), lfoG = AC.createGain(); lfo.frequency.value = .06; lfoG.gain.value = 550; lfo.connect(lfoG); lfoG.connect(padF.frequency); lfo.start();
+    MUS = {master, comp, delay, padF, step:0, nextT:AC.currentTime + .15, e8:60/80/2};
+    MUS.timer = setInterval(scheduleMusic, 150);
+    applyMusic(true);
+  }catch(e){ MUS = null; }
+}
+function voice(type, freq, t, dur, peak, att, dest, detune=0){
+  const o = AC.createOscillator(), g = AC.createGain();
+  o.type = type; o.frequency.value = freq; o.detune.value = detune; o.connect(g); g.connect(dest);
+  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(peak, t + att);
+  g.gain.setValueAtTime(peak, t + Math.max(att, dur - 1.2)); g.gain.linearRampToValueAtTime(0, t + dur + .8);
+  o.start(t); o.stop(t + dur + 1);
+  return g;
+}
+function scheduleMusic(){
+  if (!MUS || !AC) return;
+  if (AC.state === 'suspended') return;
+  while (MUS.nextT < AC.currentTime + .7){
+    const s = MUS.step, t = MUS.nextT, ch = PROG[Math.floor(s/16) % PROG.length], e8 = MUS.e8;
+    if (s % 16 === 0){
+      ch.pad.forEach((m,i) => { voice('sawtooth', mtof(m), t, 16*e8, .018, 2.2, MUS.padF, -7); voice('sawtooth', mtof(m), t, 16*e8, .018, 2.4, MUS.padF, 7); });
+      voice('sine', mtof(ch.pad[0]+24), t+.05, 16*e8, .008, 3, MUS.delay);
+    }
+    if (s % 8 === 0) voice('sine', mtof(ch.bass - 12), t, 7*e8, .14, .08, MUS.comp);
+    if (s % 4 === 2) voice('sine', mtof(ch.bass), t, e8*1.5, .03, .02, MUS.comp);
+    const play = (Math.floor(s/32) % 2 === 1) || s % 2 === 0;
+    if (play){
+      const m = ch.pad[ARP[s % 16] % ch.pad.length] + 12, g = AC.createGain(), o = AC.createOscillator();
+      o.type = 'triangle'; o.frequency.value = mtof(m); o.connect(g); g.connect(MUS.comp); g.connect(MUS.delay);
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.045, t + .01); g.gain.exponentialRampToValueAtTime(.0008, t + .55);
+      o.start(t); o.stop(t + .6);
+    }
+    if (Math.random() < .07) voice('sine', mtof(ch.pad[Math.floor(Math.random()*ch.pad.length)] + 24), t, .3, .02, .01, MUS.delay);
+    MUS.step++; MUS.nextT += e8;
+  }
+}
+function applyMusic(fadeIn){
+  if (AUDIO.music && AUDIO.vol > 0 && !MUS) startMusic();
+  if (!MUS) return;
+  const v = AUDIO.music ? AUDIO.vol * .55 : 0;
+  MUS.master.gain.cancelScheduledValues(AC.currentTime);
+  MUS.master.gain.setTargetAtTime(v, AC.currentTime, fadeIn ? 1.2 : .3);
+}
+function duck(){
+  if (!MUS || !AUDIO.music) return;
+  const v = AUDIO.vol * .55, g = MUS.master.gain, t = AC.currentTime;
+  g.cancelScheduledValues(t); g.setTargetAtTime(v * .25, t, .05); g.setTargetAtTime(v, t + 1.2, .6);
+}
+function toggleMusic(){
+  AUDIO.music = !AUDIO.music; if (AUDIO.music && AUDIO.vol === 0) AUDIO.vol = .4; saveAudio(); applyMusic(true);
+  toast(AUDIO.music ? '🎵 เพลงพื้นหลัง: เปิด' : '🔇 เพลงพื้นหลัง: ปิด', AUDIO.music ? `ความดัง ${Math.round(AUDIO.vol*100)}% · กด M เพื่อปิด` : 'กด M เพื่อเปิดอีกครั้ง', C.cyan, 1600);
+}
+function cycleVolume(){
+  const L = [0, .2, .4, .6, .8]; AUDIO.vol = L[(L.indexOf(AUDIO.vol) + 1) % L.length]; if (L.indexOf(AUDIO.vol) < 0) AUDIO.vol = .4;
+  AUDIO.music = AUDIO.vol > 0; saveAudio(); applyMusic(false);
+}
+const SND = {
+  click: () => { tone(880,0,.08,'square',.05); tone(1320,.05,.1,'sine',.06); },
+  win:   () => { duck(); [523,659,784,1047].forEach((f,i)=>tone(f,i*.09,.35,'triangle')); },
+  stamp: () => { duck(); [392,523,659,784,1047,1319].forEach((f,i)=>tone(f,i*.08,.45,'triangle',.13)); },
+  bad:   () => { tone(220,0,.3,'sawtooth',.07); tone(165,.13,.35,'sawtooth',.07); },
+  swish: () => { tone(900,0,.15,'sine',.06); tone(500,.06,.2,'sine',.05); },
+};
+const parts = [];
+function burst(x,y,n=120){ for (let i=0;i<n;i++){ const a=Math.random()*Math.PI*2, s=2+Math.random()*9; parts.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-3,life:1,c:[C.cyan,C.mag,C.green,C.amber][i%4]}); } }
+function drawParts(dt){ for (let i=parts.length-1;i>=0;i--){ const p=parts[i]; p.x+=p.vx; p.y+=p.vy; p.vy+=.25; p.life-=dt*.7; if(p.life<=0){parts.splice(i,1);continue;} ctx.globalAlpha=p.life; ctx.fillStyle=p.c; ctx.fillRect(p.x,p.y,6,6);} ctx.globalAlpha=1; }
+
+// ---------- stamps ----------
+const STATIONS = [
+  {id:'limit',   zone:'โซน 1 · ลิมิต',      name:'ไล่ล่าลิมิต',          desc:'เลื่อนมือเข้าใกล้ x = a จากสองฝั่ง',   icon:'lim'},
+  {id:'tangent', zone:'โซน 2 · อนุพันธ์',   name:'ร่างกายคือเส้นสัมผัส', desc:'กางแขนให้เป็นเส้นสัมผัส (ทั้งตัว)',  icon:'f′'},
+  {id:'airdraw', zone:'โซน 2 · อนุพันธ์',   name:'วาดฟังก์ชันกลางอากาศ', desc:'วาด f ให้ได้ f′ ตามโจทย์',            icon:'∂'},
+  {id:'riemann', zone:'โซน 3 · อินทิกรัล',  name:'ตึกระฟ้ารีมันน์',      desc:'ใช้สี่เหลี่ยมประมาณพื้นที่ใต้กราฟ',  icon:'Σ'},
+  {id:'solid',   zone:'โซน 3 · อินทิกรัล',  name:'หมุนสร้างทรงตัน',      desc:'หมุนกราฟรอบแกน x เป็นทรงตัน',       icon:'∫'},
+];
+const STAMP_KEY = 'calcMuseumStamps.v2', PLAYER_KEY = 'calcMuseumPlayer.v1', LB_KEY = 'calcMuseumScores.v1';
+const ls_get = (k, d) => { try { return JSON.parse(localStorage.getItem(k) || 'null') ?? d; } catch { return d; } };
+const ls_set = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
+let STAMP_STORE = ls_get(STAMP_KEY, {});
+let PLAYER = ls_get(PLAYER_KEY, null);
+const pidOf = p => p ? `${p.room}|${p.team}|${p.name || ''}` : 'guest';
+const playerLabel = p => p ? `${p.room} · ทีม ${p.team}${p.name ? ' ' + p.name : ''}` : 'ผู้เยี่ยมชม';
+let stamps = STAMP_STORE[pidOf(PLAYER)] || {};
+const saveStamps = () => { STAMP_STORE[pidOf(PLAYER)] = stamps; ls_set(STAMP_KEY, STAMP_STORE); if (PLAYER && LB[pidOf(PLAYER)]){ LB[pidOf(PLAYER)].stamps = stampCount(); saveLB(); } };
+const stampCount = () => STATIONS.filter(s => stamps[s.id]).length;
+let LB = ls_get(LB_KEY, {});
+const saveLB = () => ls_set(LB_KEY, LB);
+const myPoints = () => PLAYER && LB[pidOf(PLAYER)] ? LB[pidOf(PLAYER)].points : 0;
+function setPlayer(p){
+  PLAYER = p; ls_set(PLAYER_KEY, p); stamps = STAMP_STORE[pidOf(p)] || {};
+  if (p && !LB[pidOf(p)]){ LB[pidOf(p)] = {room:p.room, team:p.team, name:p.name || '', points:0, stamps:0}; saveLB(); }
+}
+let CHEAT = false;
+const POPS = [];
+function addScore(pts, station){
+  if (CHEAT || !PLAYER) return;
+  const r = LB[pidOf(PLAYER)] || (LB[pidOf(PLAYER)] = {room:PLAYER.room, team:PLAYER.team, name:PLAYER.name || '', points:0, stamps:0});
+  r.points += pts; r.stamps = stampCount(); saveLB();
+  POPS.push({text:'+' + pts, x:W/2 + (Math.random()-.5)*120, y:H*.34, life:1});
+  postFB({type:'score', room:PLAYER.room, team:PLAYER.team, name:PLAYER.name || '', station, points:pts, stamps:stampCount(), time:new Date().toISOString()});
+  if (GLB){ const t = GLB.teams.find(t => t.room === PLAYER.room && String(t.team) === String(PLAYER.team) && (t.name || '') === (PLAYER.name || ''));
+    if (t){ t.points += pts; t.stamps = stampCount(); } else GLB.teams.push({room:PLAYER.room, team:PLAYER.team, name:PLAYER.name || '', points:pts, stamps:stampCount()});
+    const rm = GLB.rooms.find(x => x.room === PLAYER.room); if (rm) rm.points += pts; else GLB.rooms.push({room:PLAYER.room, points:pts}); }
+}
+function drawPops(dt){
+  for (let i=POPS.length-1;i>=0;i--){ const p = POPS[i]; p.y -= 60*dt; p.life -= dt*.7; if (p.life <= 0){ POPS.splice(i,1); continue; }
+    ctx.globalAlpha = Math.min(1, p.life*1.5); gradText(p.text + ' PTS', p.x, p.y, 54, {cols:[C.green, C.cyan], glow:24}); }
+  ctx.globalAlpha = 1;
+}
+function giveStamp(id){
+  if (stamps[id]) return;
+  stamps[id] = true; saveStamps(); SND.stamp(); burst(W/2, H/2, 200);
+  addScore(50, 'stamp:' + id);
+  const st = STATIONS.find(s => s.id === id);
+  setTimeout(() => toast('ได้แสตมป์! 🏅 +50', `${st.name} · สะสมแล้ว ${stampCount()}/${STATIONS.length}`, C.amber, 3500), 600);
+}
+
+// ---------- visitors ----------
+const VISIT_KEY = 'calcMuseumVisits.v1';
+let VISITS = ls_get(VISIT_KEY, {visits:0, teams:[]});
+let DEVICE = ls_get('calcMuseumDevice.v1', null);
+if (!DEVICE){ DEVICE = 'D' + Date.now().toString(36) + Math.random().toString(36).slice(2,7); ls_set('calcMuseumDevice.v1', DEVICE); }
+function logVisit(p){
+  VISITS.visits++;
+  const id = pidOf(p); if (p && !VISITS.teams.includes(id)) VISITS.teams.push(id);
+  ls_set(VISIT_KEY, VISITS);
+  postFB({type:'visit', device:DEVICE, room:p ? p.room : '', team:p ? p.team : '', name:p ? (p.name || '') : '', time:new Date().toISOString()});
+  if (GLOBAL && typeof GLOBAL.visits === 'number') GLOBAL.visits++;
+}
+const visitStats = () => (GLOBAL && typeof GLOBAL.visits === 'number')
+  ? {visits:GLOBAL.visits, teams:GLOBAL.teams || 0, devices:GLOBAL.devices || 0, src:'global'}
+  : {visits:VISITS.visits, teams:VISITS.teams.length, devices:1, src:'local'};
+
+// ================================================================
+//  CAMERA + AI (MediaPipe Tasks Vision)
+// ================================================================
+const AI = {vision:null, wasm:null, hand:null, pose:null, poseLoading:null, camOK:false, err:null};
+function statusMsg(html, ms){ const s = $('status'); s.innerHTML = html; s.style.display = 'block'; clearTimeout(statusMsg._t); if (ms) statusMsg._t = setTimeout(()=> s.style.display='none', ms); }
+async function startCamera(){
+  let inFrame = false; try { inFrame = window.self !== window.top; } catch { inFrame = true; }
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    statusMsg('⚠️ ' + (inFrame ? 'หน้านี้เปิดในกรอบของเว็บอื่น (เช่น ลิงก์ claude.ai) จึงห้ามใช้กล้อง — ดาวน์โหลดไฟล์ .html แล้วเปิดใน Chrome'
+      : 'เบราว์เซอร์ไม่ยอมให้ใช้กล้องจากที่อยู่นี้ — เปิดเป็นไฟล์ในเครื่อง หรือผ่าน https') + '<br><small>ตอนนี้ใช้เมาส์แทนได้</small>'); return;
+  }
+  statusMsg('กำลังเปิดกล้อง… (ถ้ามีป๊อปอัปถาม ให้กด "อนุญาต")');
+  try{
+    const stream = await navigator.mediaDevices.getUserMedia({video:{width:{ideal:1280},height:{ideal:720},facingMode:'user'},audio:false});
+    video.srcObject = stream; await video.play(); AI.camOK = true;
+  }catch(err){
+    const n = err && err.name;
+    statusMsg('⚠️ ' + (n==='NotAllowedError' ? 'กล้องถูกปฏิเสธ — กดไอคอนกล้องที่ช่องที่อยู่เว็บ เลือก "อนุญาต" แล้วรีเฟรช'
+      : n==='NotFoundError' ? 'ไม่พบกล้อง — เสียบเว็บแคมแล้วรีเฟรช'
+      : n==='NotReadableError' ? 'กล้องถูกโปรแกรมอื่นใช้อยู่ — ปิด Zoom/Meet/LINE แล้วรีเฟรช'
+      : 'เปิดกล้องไม่ได้: ' + (n||'') + ' ' + (err && err.message || '')) + '<br><small>ตอนนี้ใช้เมาส์แทนได้</small>'); return;
+  }
+  statusMsg('กล้องพร้อม · กำลังโหลด AI ตรวจจับมือ… (ครั้งแรกอาจใช้ 10–30 วินาที)');
+  try{
+    await loadVision();
+    const opts = d => ({ baseOptions:{ modelAssetPath:'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task', delegate:d },
+      runningMode:'VIDEO', numHands:1, minHandDetectionConfidence:.5, minHandPresenceConfidence:.5, minTrackingConfidence:.5 });
+    try { AI.hand = await AI.vision.HandLandmarker.createFromOptions(AI.fileset, opts('GPU')); }
+    catch { AI.hand = await AI.vision.HandLandmarker.createFromOptions(AI.fileset, opts('CPU')); }
+    statusMsg('พร้อมแล้ว! ยกมือขึ้น ชี้นิ้วค้างบนการ์ดเพื่อเข้าภารกิจ', 3500);
+  }catch(err){ aiFail(err); }
+}
+function aiFail(err){
+  statusMsg('⚠️ กล้องเปิดได้ แต่โหลด AI ไม่สำเร็จ — เช็กอินเทอร์เน็ต หรือเน็ตโรงเรียนอาจบล็อก cdn.jsdelivr.net / storage.googleapis.com<br><small>' + String(err && (err.message||err)).slice(0,160) + ' · ตอนนี้ใช้เมาส์แทนได้</small>', 15000);
+}
+async function loadVision(){
+  if (AI.vision) return;
+  const SRC = [
+    ['https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs','https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm'],
+    ['https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14','https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm'],
+    ['https://unpkg.com/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs','https://unpkg.com/@mediapipe/tasks-vision@0.10.14/wasm'],
+  ];
+  let lastErr = null;
+  for (const [js,w] of SRC){
+    try { const mod = await import(js); const v = mod.HandLandmarker ? mod : (mod.default || mod);
+      if (v.HandLandmarker){ AI.vision = v; AI.wasm = w; break; } } catch(e){ lastErr = e; }
+  }
+  if (!AI.vision) throw lastErr || new Error('โหลด MediaPipe ไม่ได้');
+  AI.fileset = await AI.vision.FilesetResolver.forVisionTasks(AI.wasm);
+}
+function ensurePose(){
+  if (AI.pose || AI.poseLoading || !AI.camOK) return;
+  statusMsg('กำลังโหลด AI จับท่าทางทั้งตัว… (ครั้งแรกอาจใช้ 10–30 วินาที)');
+  AI.poseLoading = (async () => {
+    try{
+      await loadVision();
+      const opts = d => ({ baseOptions:{ modelAssetPath:'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task', delegate:d },
+        runningMode:'VIDEO', numPoses:1, minPoseDetectionConfidence:.5, minTrackingConfidence:.5, outputSegmentationMasks:true });
+      try { AI.pose = await AI.vision.PoseLandmarker.createFromOptions(AI.fileset, opts('GPU')); }
+      catch { AI.pose = await AI.vision.PoseLandmarker.createFromOptions(AI.fileset, opts('CPU')); }
+      statusMsg('พร้อมแล้ว! ยืนให้กล้องเห็นตั้งแต่หัวถึงเอว แล้วกางแขน', 3500);
+    }catch(err){ aiFail(err); AI.poseLoading = null; }
+  })();
+}
+
+function coverMap(){ const vw = video.videoWidth, vh = video.videoHeight, s = Math.max(W/vw, H/vh), dw = vw*s, dh = vh*s; return {dx:(W-dw)/2, dy:(H-dh)/2, dw, dh}; }
+const lmToS = (l,c) => [c.dx + (1-l.x)*c.dw, c.dy + l.y*c.dh];
+const dist = (a,b) => Math.hypot(a[0]-b[0], a[1]-b[1]);
+
+// hand state
+const HAND = {pts:null, seen:-1e9, pinch:false, pinchStart:false, open:false, sx:null, sy:null};
+// pose state
+const POSE = {sk:null, seen:-1e9, arm:null, armSeen:-1e9, sa:null, sb:null, ptrs:[]};
+// segmentation
+const maskCv = document.createElement('canvas'), maskCtx = maskCv.getContext('2d');
+const personCv = document.createElement('canvas'), personCtx = personCv.getContext('2d');
+let maskImg = null, maskAt = -1e9, lastVT = -1;
+
+function detect(){
+  if (!AI.camOK || video.readyState < 2 || video.currentTime === lastVT) return;
+  const wantPose = SC.needs === 'pose';
+  if (wantPose) ensurePose();
+  lastVT = video.currentTime;
+  const now = performance.now();
+  if (wantPose && AI.pose){
+    let res; try { res = AI.pose.detectForVideo(video, now); } catch { return; }
+    // mask
+    const masks = res && res.segmentationMasks;
+    if (masks && masks.length){
+      try{
+        if (BG.mode === 'cut'){
+          const mk = masks[0], w = mk.width, h = mk.height, arr = mk.getAsFloat32Array();
+          if (maskCv.width !== w || maskCv.height !== h){ maskCv.width = w; maskCv.height = h; maskImg = null; }
+          if (!maskImg) maskImg = maskCtx.createImageData(w,h);
+          const d = maskImg.data;
+          for (let i=0, j=3; i<arr.length; i++, j+=4){ const a = (arr[i]-.25)*2; d[j] = a<=0 ? 0 : a>=1 ? 255 : a*255; }
+          maskCtx.putImageData(maskImg,0,0); maskAt = now;
+        }
+      } catch {} finally { for (const m of masks){ try { m.close(); } catch {} } }
+    }
+    const lm = res && res.landmarks && res.landmarks[0];
+    if (!lm){ POSE.sk = null; return; }
+    const c = coverMap(), vis = l => (l.visibility === undefined ? 1 : l.visibility);
+    POSE.sk = lm.map(l => ({p:lmToS(l,c), v:vis(l)})); POSE.seen = now;
+    POSE.ptrs = [19,20].filter(i => vis(lm[i]) > .5).map(i => lmToS(lm[i], c));
+    if (vis(lm[15]) > .5 && vis(lm[16]) > .5){
+      const a = lmToS(lm[15],c), b = lmToS(lm[16],c), k = .45;
+      POSE.sa = POSE.sa ? [lerp(POSE.sa[0],a[0],k), lerp(POSE.sa[1],a[1],k)] : a;
+      POSE.sb = POSE.sb ? [lerp(POSE.sb[0],b[0],k), lerp(POSE.sb[1],b[1],k)] : b;
+      POSE.arm = {a:POSE.sa, b:POSE.sb}; POSE.armSeen = now;
+    }
+  } else if (AI.hand){
+    let res; try { res = AI.hand.detectForVideo(video, now); } catch { return; }
+    const lm = res && res.landmarks && res.landmarks[0];
+    if (!lm){ HAND.pts = null; return; }
+    const c = coverMap(), P = lm.map(l => lmToS(l,c));
+    HAND.pts = P; HAND.seen = now;
+    const size = dist(P[0],P[9]) || 1, pr = dist(P[4],P[8]) / size;
+    const was = HAND.pinch;
+    HAND.pinch = was ? pr < .45 : pr < .32;
+    if (HAND.pinch && !was) HAND.pinchStart = true;
+    const tip = HAND.pinch ? [(P[4][0]+P[8][0])/2, (P[4][1]+P[8][1])/2] : P[8];
+    HAND.sx = HAND.sx === null ? tip[0] : lerp(HAND.sx, tip[0], .5);
+    HAND.sy = HAND.sy === null ? tip[1] : lerp(HAND.sy, tip[1], .5);
+    HAND.open = !HAND.pinch && pr > .6 && [[8,6],[12,10],[16,14],[20,18]].every(([t,p]) => dist(P[t],P[0]) > dist(P[p],P[0])*1.12);
+  }
+}
+
+// ---------- mouse ----------
+const MOUSE = {x:0, y:0, down:false, seen:-1e9, start:false, dragA:null, dragB:null};
+cv.addEventListener('pointerdown', e => {
+  MOUSE.x = e.clientX; MOUSE.y = e.clientY; MOUSE.seen = performance.now();
+  const b = curButtons.find(b => !b.disabled && inRect({x:e.clientX, y:e.clientY}, b));
+  if (b){ fire(b); return; }
+  MOUSE.down = true; MOUSE.start = true; MOUSE.dragA = [e.clientX, e.clientY]; MOUSE.dragB = [e.clientX+1, e.clientY];
+});
+cv.addEventListener('pointermove', e => { MOUSE.x = e.clientX; MOUSE.y = e.clientY; MOUSE.seen = performance.now(); if (MOUSE.down) MOUSE.dragB = [e.clientX, e.clientY]; });
+addEventListener('pointerup', () => { MOUSE.down = false; });
+
+// unified pointers
+function getPointers(now){
+  if (SC.needs === 'pose' && now - POSE.seen < 500 && POSE.ptrs.length) return POSE.ptrs.map(p => ({x:p[0], y:p[1], pinch:false, pinchStart:false, src:'pose'}));
+  if (now - HAND.seen < 400 && HAND.sx !== null) return [{x:HAND.sx, y:HAND.sy, pinch:HAND.pinch, pinchStart:HAND.pinchStart, open:HAND.open, src:'hand'}];
+  if (now - MOUSE.seen < 4000) return [{x:MOUSE.x, y:MOUSE.y, pinch:MOUSE.down, pinchStart:MOUSE.start, src:'mouse'}];
+  return [];
+}
+
+// ---------- air buttons ----------
+const inRect = (p,b) => p.x >= b.x && p.x <= b.x+b.w && p.y >= b.y && p.y <= b.y+b.h;
+const btnState = new Map();
+let curButtons = [], navCool = 0;
+function fire(b){ SND.click(); navCool = .7; b.action(); }
+function processButtons(dt, P){
+  curButtons = (SC.buttons ? SC.buttons() : []).concat(TEACHER.on ? teacherButtons() : []);
+  const dwell = TEACHER.dwell * (SC.needs === 'pose' ? 1.4 : 1.0);
+  for (const b of curButtons){
+    let st = btnState.get(b.id); if (!st){ st = {t:0, lock:false}; btnState.set(b.id, st); }
+    b.prog = 0;
+    if (b.disabled){ st.t = 0; continue; }
+    const hov = P.some(p => p.src !== 'mouse' && inRect(p,b));
+    b.hover = P.some(p => inRect(p,b));
+    if (!hov){ st.t = 0; st.lock = false; continue; }
+    if (st.lock || navCool > 0) continue;
+    if (P.some(p => p.src === 'hand' && p.pinchStart && inRect(p,b))){ st.lock = !b.repeat; st.t = 0; fire(b); break; }
+    st.t += dt; b.prog = st.t/dwell;
+    if (st.t >= dwell){ st.lock = !b.repeat; st.t = b.repeat ? dwell*.35 : 0; b.prog = 0; fire(b); break; }
+  }
+}
+function drawButtons(t){
+  for (const b of curButtons){
+    const col = b.color || C.cyan, R = b.r ?? 12;
+    if (b.custom){ b.draw(b); }
+    else {
+      ctx.save(); rr(b.x,b.y,b.w,b.h,R);
+      if (b.disabled) ctx.fillStyle = 'rgba(16,20,40,.6)';
+      else if (b.on){ const g = ctx.createLinearGradient(b.x,b.y,b.x+b.w,b.y+b.h); g.addColorStop(0,hexA(col,.5)); g.addColorStop(1,'rgba(139,108,255,.42)'); ctx.fillStyle = g; }
+      else { const g = ctx.createLinearGradient(b.x,b.y,b.x,b.y+b.h); g.addColorStop(0, b.hover ? hexA(col,.2) : 'rgba(18,22,52,.82)'); g.addColorStop(1, b.hover ? hexA(col,.1) : 'rgba(8,10,28,.88)'); ctx.fillStyle = g; }
+      ctx.fill();
+      ctx.strokeStyle = b.disabled ? 'rgba(139,156,196,.22)' : hexA(col, b.hover || b.on ? .95 : .42); ctx.lineWidth = 1.3;
+      if ((b.hover || b.on) && !b.disabled){ ctx.shadowColor = col; ctx.shadowBlur = 22; }
+      ctx.stroke(); ctx.restore();
+      // tiny corner ticks
+      if (!b.disabled){ ctx.save(); ctx.strokeStyle = hexA(col,.9); ctx.lineWidth = 2; const k = 7;
+        line(b.x+R*.4, b.y+b.h-1.5, b.x+R*.4+k, b.y+b.h-1.5); line(b.x+b.w-R*.4-k, b.y+1.5, b.x+b.w-R*.4, b.y+1.5); ctx.restore(); }
+      const big = b.size || 21, tc = b.disabled ? C.dim : '#fff';
+      if (b.sub){
+        txt(b.label, b.x+b.w/2, b.y+b.h/2-4, {size:big, weight:700, align:'center', color:tc, maxW:b.w-16});
+        txt(b.sub, b.x+b.w/2, b.y+b.h/2+20, {size:13, align:'center', color:C.dim, maxW:b.w-16, font:'mono'});
+      } else txt(b.label, b.x+b.w/2, b.y+b.h/2+1, {size:big, weight:700, align:'center', base:'middle', color:tc, maxW:b.w-16});
+    }
+    if (b.prog > 0){
+      ctx.save(); rr(b.x,b.y,b.w,b.h,b.custom ? 18 : R); const per = 2*(b.w+b.h);
+      ctx.setLineDash([per*clamp(b.prog,0,1), per]); ctx.lineWidth = 4; ctx.strokeStyle = C.mag; ctx.shadowColor = C.mag; ctx.shadowBlur = 18; ctx.stroke(); ctx.restore();
+    }
+  }
+}
+function drawPointers(P, t){
+  const prog = Math.max(0, ...curButtons.map(b => b.prog || 0));
+  for (const p of P){
+    if (p.src === 'mouse') continue;
+    const col = p.pinch ? C.mag : C.cyan, rot = t/600;
+    ctx.save(); ctx.translate(p.x, p.y);
+    ctx.strokeStyle = col; ctx.shadowColor = col; ctx.shadowBlur = 14; ctx.lineWidth = 2.5; ctx.lineCap = 'round';
+    for (let k=0;k<3;k++){ ctx.beginPath(); ctx.arc(0,0,22, rot+k*2.094, rot+k*2.094+1.25); ctx.stroke(); }
+    ctx.lineWidth = 2;
+    for (let k=0;k<4;k++){ const a = k*Math.PI/2; line(Math.cos(a)*29, Math.sin(a)*29, Math.cos(a)*36, Math.sin(a)*36); }
+    ctx.fillStyle = col; ctx.beginPath(); ctx.arc(0,0, p.pinch ? 9 : 4.5, 0, Math.PI*2); ctx.fill();
+    if (prog > 0){ ctx.strokeStyle = C.mag; ctx.shadowColor = C.mag; ctx.lineWidth = 5; ctx.beginPath(); ctx.arc(0,0,30,-Math.PI/2,-Math.PI/2+Math.PI*2*clamp(prog,0,1)); ctx.stroke(); }
+    ctx.restore();
+  }
+}
+const backBtn = () => ({id:'back', x:16, y:16, w:190, h:62, label:'←  หน้าหลัก', action:() => go('hub')});
+
+// ---------- background ----------
+const BG = {mode:'dim'};
+const BG_LIST = ['dim','clear','cut','none'];
+const BG_NAME = {dim:'กล้องแบบมืด', clear:'กล้องชัด', cut:'ตัดฉากหลัง (เฉพาะภารกิจใช้ทั้งตัว)', none:'ไม่แสดงกล้อง'};
+const GLYPHS = Array.from({length:28}, () => ({x:Math.random(), y:Math.random(), s:14+Math.random()*30, v:.008+Math.random()*.02,
+  g:['∫','Σ','π','∞','dx','lim','f′','Δ','√','e','θ','∂','dy/dx','∮'][Math.floor(Math.random()*14)], a:.04+Math.random()*.09}));
+function drawAurora(t, {base=true, a=1}={}){
+  if (base){ ctx.fillStyle = '#04040f'; ctx.fillRect(0,0,W,H); }
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  [[.22,.28,C.cyan],[.78,.22,C.violet],[.55,.8,C.mag]].forEach(([bx,by,c],i) => {
+    const x = W*(bx + .09*Math.sin(t/4200 + i*2.1)), y = H*(by + .07*Math.cos(t/5300 + i)), r = Math.max(W,H)*.5;
+    const g = ctx.createRadialGradient(x,y,0,x,y,r); g.addColorStop(0,hexA(c,.22*a)); g.addColorStop(1,hexA(c,0));
+    ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+  });
+  ctx.restore();
+}
+function drawFloor(t, a=1){
+  const hy = H*.64;
+  ctx.save();
+  const lg = ctx.createLinearGradient(0,hy,0,H); lg.addColorStop(0,'rgba(34,228,255,0)'); lg.addColorStop(1,`rgba(34,228,255,${.38*a})`);
+  ctx.strokeStyle = lg; ctx.lineWidth = 1;
+  const ph = (t/1400) % 1;
+  for (let i=0;i<16;i++){ const z = (i + ph)/16, y = hy + (H-hy)*z*z; line(0,y,W,y); }
+  for (let k=-16;k<=16;k++) line(W/2 + k*W/70, hy, W/2 + k*W/7, H);
+  const g = ctx.createLinearGradient(0,hy-50,0,hy+30); g.addColorStop(0,'rgba(139,108,255,0)'); g.addColorStop(.6,hexA(C.violet,.32*a)); g.addColorStop(1,'rgba(139,108,255,0)');
+  ctx.fillStyle = g; ctx.fillRect(0,hy-50,W,80);
+  ctx.restore();
+}
+function drawGlyphs(t){
+  for (const g of GLYPHS){ const y = (((g.y - t*g.v/1000) % 1) + 1) % 1;
+    txt(g.g, g.x*W, y*H, {size:g.s, color:`rgba(170,205,255,${g.a})`, font:'mono'}); }
+}
+function vignette(){
+  const g = ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*.35,W/2,H/2,Math.max(W,H)*.78);
+  g.addColorStop(0,'rgba(0,0,8,0)'); g.addColorStop(1,'rgba(0,0,8,.62)'); ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+}
+function drawSpace(t){ drawAurora(t); drawFloor(t); drawGlyphs(t); }
+function drawBG(t){
+  const camOK = AI.camOK && video.readyState >= 2 && video.videoWidth;
+  const c = camOK ? coverMap() : null;
+  if (camOK && BG.mode === 'cut' && SC.needs === 'pose' && t - maskAt < 1000){
+    drawSpace(t);
+    const vw = video.videoWidth, vh = video.videoHeight;
+    if (personCv.width !== vw || personCv.height !== vh){ personCv.width = vw; personCv.height = vh; }
+    personCtx.globalCompositeOperation = 'copy'; personCtx.drawImage(video,0,0,vw,vh);
+    personCtx.globalCompositeOperation = 'destination-in'; personCtx.drawImage(maskCv,0,0,vw,vh);
+    personCtx.globalCompositeOperation = 'source-over';
+    ctx.save(); ctx.translate(W,0); ctx.scale(-1,1); ctx.shadowColor = 'rgba(34,228,255,.85)'; ctx.shadowBlur = 34;
+    ctx.drawImage(personCv, c.dx, c.dy, c.dw, c.dh); ctx.restore();
+  } else if (camOK && BG.mode !== 'none'){
+    ctx.save(); ctx.translate(W,0); ctx.scale(-1,1); ctx.drawImage(video, c.dx, c.dy, c.dw, c.dh); ctx.restore();
+    if (BG.mode === 'dim' || BG.mode === 'cut'){
+      ctx.save(); ctx.globalCompositeOperation = 'color'; ctx.globalAlpha = .6;
+      const g = ctx.createLinearGradient(0,0,W,H); g.addColorStop(0,C.cyan); g.addColorStop(1,C.violet); ctx.fillStyle = g; ctx.fillRect(0,0,W,H); ctx.restore();
+      ctx.fillStyle = 'rgba(4,4,15,.52)'; ctx.fillRect(0,0,W,H);
+      drawAurora(t, {base:false, a:.55});
+    } else { ctx.fillStyle = 'rgba(4,4,15,.12)'; ctx.fillRect(0,0,W,H); }
+  } else drawSpace(t);
+  vignette();
+  ctx.fillStyle = 'rgba(34,228,255,.035)'; ctx.fillRect(0, (t*.08) % H, W, 2);
+}
+function drawHandSkeleton(){
+  if (!HAND.pts || performance.now() - HAND.seen > 400) return;
+  const L = [[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],[13,17],[17,18],[18,19],[19,20],[0,17]];
+  ctx.save(); ctx.strokeStyle = 'rgba(255,255,255,.4)'; ctx.lineWidth = 2;
+  for (const [a,b] of L) line(...HAND.pts[a], ...HAND.pts[b]); ctx.restore();
+}
+function drawPoseSkeleton(){
+  if (!POSE.sk || performance.now() - POSE.seen > 500) return;
+  const L = [[11,12],[11,13],[13,15],[12,14],[14,16],[11,23],[12,24],[23,24]];
+  ctx.save(); ctx.strokeStyle = 'rgba(255,255,255,.35)'; ctx.lineWidth = 3;
+  for (const [i,j] of L){ if (POSE.sk[i].v < .5 || POSE.sk[j].v < .5) continue; line(...POSE.sk[i].p, ...POSE.sk[j].p); }
+  ctx.restore();
+}
+function titleBar(zone, name){
+  const x = 222, y = 16, h = 62;
+  const rightLimit = Math.min(W-16, ...curButtons.filter(b => b.y < 80 && b.x > x).map(b => b.x));
+  const w = Math.min(1000, rightLimit - 12 - x);
+  glass(x,y,w,h,{brackets:false});
+  const g = ctx.createLinearGradient(0,y+12,0,y+h-12); g.addColorStop(0,C.cyan); g.addColorStop(1,C.mag);
+  ctx.fillStyle = g; ctx.fillRect(x+13, y+13, 3, h-26);
+  txt(zone, x+30, y+25, {size:12, weight:600, color:C.cyan, font:'mono', ls:1});
+  txt(name, x+30, y+51, {size:23, weight:700, color:'#fff'});
+  if (w > 560){
+    const now = performance.now();
+    const mode = SC.needs === 'pose' ? (now-POSE.seen < 500 ? 'BODY TRACKING' : (AI.pose ? 'NO BODY' : 'LOADING AI')) :
+                 (now-HAND.seen < 400 ? 'HAND TRACKING' : (AI.hand ? 'NO HAND' : 'MOUSE MODE'));
+    const live = mode.endsWith('TRACKING'), col = live ? C.green : C.amber;
+    ctx.save(); ctx.font = `600 12px ${MONO}`; const cw = ctx.measureText(mode).width + 36; ctx.restore();
+    const cx = x + w - 16 - cw;
+    rr(cx, y+11, cw, 22, 11); ctx.save(); ctx.fillStyle = hexA(col,.12); ctx.fill(); ctx.strokeStyle = hexA(col,.5); ctx.lineWidth = 1; ctx.stroke(); ctx.restore();
+    dot(cx+13, y+22, live ? 3.5 + Math.sin(now/180) : 3.5, col, 10);
+    txt(mode, cx+24, y+26, {size:12, weight:600, color:col, font:'mono'});
+    txt('by ' + CONFIG.DEVELOPER + '  ·  ' + CONFIG.VERSION.split(' ')[0], x+w-16, y+52, {size:12, color:C.dim, align:'right', font:'mono'});
+    if (w > 820){
+      const lab = PLAYER ? `${PLAYER.room} · ทีม ${PLAYER.team}  ·  ${myPoints()} PTS` : 'ผู้เยี่ยมชม · ไม่บันทึกคะแนน';
+      ctx.save(); ctx.font = `600 12px ${MONO}`; const pw = ctx.measureText(lab).width + 26; ctx.restore();
+      const px = cx - 10 - pw; rr(px, y+11, pw, 22, 11); ctx.save(); ctx.fillStyle = hexA(C.violet,.18); ctx.fill(); ctx.strokeStyle = hexA(C.violet,.6); ctx.lineWidth = 1; ctx.stroke(); ctx.restore();
+      txt(lab, px+13, y+26, {size:12, weight:600, color:'#cbbcff', font:'mono'});
+    }
+  }
+}
+// ================================================================
+//  SCENES
+// ================================================================
+const SCENES = {};
+let SC = null;
+const TRANS = {t:0, D:.5};
+function go(id){
+  if (SC && SC.exit) SC.exit();
+  SC = SCENES[id]; btnState.clear(); navCool = .8; curButtons = []; TRANS.t = TRANS.D;
+  if (SC.enter) SC.enter();
+}
+function drawTrans(dt){
+  if (TRANS.t <= 0) return;
+  const a = TRANS.t/TRANS.D, e = a*a;
+  ctx.fillStyle = `rgba(4,4,15,${e*.96})`; ctx.fillRect(0,0,W,H);
+  const y = H*(1-a); glowLine(0,y,W,y,C.cyan,2,24);
+  TRANS.t -= dt;
+}
+// ---------------------------------------------------------------- HUB
+function drawStationCard(b, s, i){
+  const t = performance.now(), done = stamps[s.id], col = done ? C.green : C.cyan;
+  ctx.save(); ctx.translate(0, (b.hover ? -6 : 0) + Math.sin(t/900 + i*1.3)*3);
+  if (b.hover){ ctx.save(); rr(b.x,b.y,b.w,b.h,18); ctx.shadowColor = col; ctx.shadowBlur = 46; ctx.fillStyle = 'rgba(0,0,0,.25)'; ctx.fill(); ctx.restore(); }
+  glass(b.x,b.y,b.w,b.h,{r:18, border: b.hover ? col : null, accent:col});
+  ctx.save(); rr(b.x,b.y,b.w,b.h,18); ctx.clip();
+  const sx = b.x - b.w + ((t/9 + i*170) % (b.w*3));
+  const g = ctx.createLinearGradient(sx,b.y,sx+b.w*.5,b.y+b.h); g.addColorStop(0,'rgba(255,255,255,0)'); g.addColorStop(.5,'rgba(190,220,255,.07)'); g.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.fillStyle = g; ctx.fillRect(b.x,b.y,b.w,b.h);
+  txt(String(i+1).padStart(2,'0'), b.x+b.w-12, b.y+b.h-6, {size:b.h*.62, weight:700, align:'right', color:'rgba(255,255,255,.045)', font:'mono'});
+  ctx.restore();
+  txt(`${String(i+1).padStart(2,'0')} / ${s.zone}`, b.x+22, b.y+34, {size:12, weight:600, color:col, font:'mono', ls:1});
+  const ix = b.x+b.w-54, iy = b.y+60;
+  ring(ix, iy, 30, hexA(col,.3), 1.5);
+  ctx.save(); ctx.translate(ix,iy); ctx.rotate(t/1400 + i); ctx.strokeStyle = col; ctx.lineWidth = 2.5; ctx.shadowColor = col; ctx.shadowBlur = 12;
+  ctx.beginPath(); ctx.arc(0,0,30,0,1.3); ctx.stroke(); ctx.beginPath(); ctx.arc(0,0,30,Math.PI,Math.PI+.6); ctx.stroke(); ctx.restore();
+  txt(s.icon, ix, iy+1, {size: s.icon.length > 2 ? 19 : 28, weight:700, align:'center', base:'middle', color: done ? C.green : C.mag, glow:16});
+  txt(s.name, b.x+22, b.y+b.h*.6, {size:Math.min(25, b.w/12), weight:700, color:'#fff', maxW:b.w-44});
+  txt(s.desc, b.x+22, b.y+b.h*.6+26, {size:14, color:C.dim, maxW:b.w-44});
+  if (done) chip(b.x+22, b.y+b.h-42, '✓ CLEARED', C.green);
+  else txt('ENTER  →', b.x+22, b.y+b.h-22, {size:13, weight:600, color: b.hover ? C.cyan : 'rgba(139,156,196,.55)', font:'mono', ls:2});
+  ctx.restore();
+}
+function gradText(s, x, y, size, {align='center', weight=700, ls=0, cols=[C.cyan, C.violet, C.mag], glow=26}={}){
+  ctx.save(); ctx.font = `${weight} ${size}px ${FONT}`; ctx.textAlign = align; if (ls && 'letterSpacing' in ctx) ctx.letterSpacing = ls+'px';
+  const w = ctx.measureText(s).width, x0 = align === 'center' ? x-w/2 : align === 'right' ? x-w : x;
+  const g = ctx.createLinearGradient(x0,0,x0+w,0); cols.forEach((c,i) => g.addColorStop(i/(cols.length-1), c));
+  ctx.fillStyle = g; ctx.shadowColor = C.violet; ctx.shadowBlur = glow; ctx.fillText(s, x, y); ctx.restore();
+}
+SCENES.hub = {
+  needs:'hand',
+  enter(){ fetchGlobal(); },
+  layout(){ const cw = Math.min(350, (W-110)/3), ch = Math.min(205, H*.235), gap = 22, top = Math.max(255, H*.31); return {cw, ch, gap, top}; },
+  draw(t){
+    const cx = W/2, ty = Math.max(118, H*.15);
+    ctx.save(); ctx.translate(cx, ty-8);
+    for (const [rx,ry,col,sp] of [[Math.min(600,W*.38),74,C.cyan,1],[Math.min(470,W*.3),54,C.mag,-1.4]]){
+      ctx.strokeStyle = hexA(col,.25); ctx.lineWidth = 1.2; ctx.beginPath(); ctx.ellipse(0,0,rx,ry,0,0,Math.PI*2); ctx.stroke();
+      for (let k=0;k<3;k++){ const a = sp*t/2600 + k*2.094; dot(rx*Math.cos(a), ry*Math.sin(a), 3.5, col, 14); }
+    }
+    ctx.restore();
+    txt('AR LEARNING EXPERIENCE  ·  ค 32202', cx, ty-62, {size:13, weight:600, align:'center', color:C.cyan, font:'mono', ls:5});
+    const size = Math.min(84, W/12.5);
+    gradText('CALCULUS MUSEUM', cx, ty+size*.32, size, {ls:-2});
+    txt('พิพิธภัณฑ์แคลคูลัส · ชี้นิ้วค้างบนการ์ด 1 วินาที หรือจีบนิ้ว เพื่อเข้าภารกิจ', cx, ty+size*.32+38, {size:18, align:'center', color:C.dim});
+    const n = stampCount(), sw = 58, sg = 8, tot = STATIONS.length*sw + (STATIONS.length-1)*sg, sx0 = cx - tot/2, sy0 = ty + size*.32 + 62;
+    STATIONS.forEach((st,i) => { rr(sx0+i*(sw+sg), sy0, sw, 6, 3); ctx.save(); ctx.fillStyle = stamps[st.id] ? C.green : 'rgba(255,255,255,.1)';
+      if (stamps[st.id]){ ctx.shadowColor = C.green; ctx.shadowBlur = 12; } ctx.fill(); ctx.restore(); });
+    txt(`STAMPS ${n}/${STATIONS.length}`, cx, sy0+26, {size:12, weight:600, align:'center', color: n === STATIONS.length ? C.green : C.dim, font:'mono', ls:3});
+    { const v = visitStats();
+      txt(`👥  ผู้เข้าชม ${v.visits} ครั้ง  ·  ${v.teams} ทีม` + (v.src === 'global' ? `  ·  ${v.devices} เครื่อง` : '  (เครื่องนี้)'), cx, H-96, {size:15, weight:600, align:'center', color:'#cbbcff'}); }
+    txt('DEVELOPED BY', cx, H-66, {size:11, weight:600, align:'center', color:C.dim, font:'mono', ls:4});
+    gradText(CONFIG.DEVELOPER, cx, H-38, 24, {cols:[C.cyan, C.mag], glow:16});
+    txt(CONFIG.ORG + '  ·  ' + CONFIG.VERSION, cx, H-15, {size:12, align:'center', color:C.dim});
+    drawHandSkeleton();
+  },
+  buttons(){
+    const {cw, ch, gap, top} = this.layout(), bs = [];
+    STATIONS.forEach((st,i) => {
+      const row = i < 3 ? 0 : 1, inRow = row ? 2 : 3, col = row ? i-3 : i, rw = inRow*cw + (inRow-1)*gap;
+      bs.push({id:'st-'+st.id, x:(W-rw)/2 + col*(cw+gap), y:top + row*(ch+gap), w:cw, h:ch, custom:true, action:() => go(st.id), draw:b => drawStationCard(b, st, i)});
+    });
+    const by = H - 84, hearts = GLOBAL ? GLOBAL.hearts + pendingHearts : FB.hearts;
+    bs.push({id:'bg', x:20, y:by, w:230, h:60, label:BG_NAME[BG.mode].split(' ')[0], sub:'BACKGROUND · B', size:16, action:cycleBG});
+    bs.push({id:'music', x:262, y:by, w:200, h:60, label: AUDIO.music ? '🎵 เพลง: เปิด' : '🔇 เพลง: ปิด', sub:'MUSIC · M', size:16, color:C.violet, on:AUDIO.music, action:toggleMusic});
+    bs.push({id:'fb', x:W-290, y:by, w:270, h:60, label:'♥  ให้กำลังใจผู้พัฒนา', sub: hearts ? `${hearts} HEARTS` : 'FEEDBACK', size:17, color:C.mag, action:() => go('feedback')});
+    bs.push({id:'player', x:20, y:20, w:Math.min(330, W*.22), h:66, label:playerLabel(PLAYER), sub: PLAYER ? `${myPoints()} PTS · เปลี่ยนผู้เล่น` : 'ไม่บันทึกคะแนน · แตะเพื่อเลือกทีม', size:18, color:C.violet, action:() => go('player')});
+    bs.push({id:'lb', x:W-20-Math.min(300, W*.2), y:20, w:Math.min(300, W*.2), h:66, label:'🏆  กระดานคะแนน', sub:'LEADERBOARD', size:18, color:C.amber, action:() => go('leaderboard')});
+    if (stampCount() === STATIONS.length)
+      bs.push({id:'cert', x:W/2-170, y:Math.min(top + 2*ch + gap + 20, H-160), w:340, h:58, label:'🏆  รับใบประกาศ', sub:'แล้วฝากกำลังใจให้ผู้พัฒนาด้วยนะ ♥', color:C.amber, on:true, action:() => go('cert')});
+    return bs;
+  },
+};
+function cycleBG(){ BG.mode = BG_LIST[(BG_LIST.indexOf(BG.mode)+1) % BG_LIST.length]; toast('ฉากหลัง', BG_NAME[BG.mode], C.cyan, 1800); }
+
+// ---------------------------------------------------------------- CERTIFICATE
+SCENES.cert = {
+  needs:'hand',
+  enter(){ burst(W/2, H/2, 260); SND.stamp(); spawnHearts(W/2, H*.8, 30); },
+  draw(t){
+    const w = Math.min(1060, W-80), h = Math.min(580, H-200), x = (W-w)/2, y = 96;
+    glass(x,y,w,h,{border:C.amber, accent:C.amber, r:20});
+    ctx.save(); ctx.strokeStyle = 'rgba(255,181,71,.25)'; ctx.lineWidth = 1; rr(x+16,y+16,w-32,h-32,14); ctx.stroke(); ctx.restore();
+    txt('CERTIFICATE OF COMPLETION', W/2, y+64, {size:15, weight:600, align:'center', color:C.amber, font:'mono', ls:6});
+    gradText('นักสำรวจแคลคูลัส', W/2, y+150, Math.min(66, w/11), {cols:[C.amber, C.mag, C.violet]});
+    txt('ผ่านครบทุกภารกิจใน CALCULUS MUSEUM', W/2, y+198, {size:22, align:'center'});
+    STATIONS.forEach((st,i) => {
+      const cx = x + w*(i+.5)/STATIONS.length, cy = y + h*.56;
+      dot(cx, cy, 34, 'rgba(61,255,154,.18)', 20); ring(cx, cy, 36, C.green, 2.5);
+      ctx.save(); ctx.translate(cx,cy); ctx.rotate(t/1500+i); ctx.strokeStyle = C.green; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0,0,44,0,1); ctx.stroke(); ctx.restore();
+      txt(st.icon, cx, cy+1, {size: st.icon.length > 2 ? 18 : 26, weight:700, align:'center', base:'middle', color:C.green});
+      txt(st.name, cx, cy+66, {size:14, align:'center', color:C.dim, maxW:w/STATIONS.length-10});
+    });
+    const d = new Date().toLocaleDateString('th-TH', {year:'numeric', month:'long', day:'numeric'});
+    txt(d, x+60, y+h-58, {size:16, color:C.ink});
+    txt(CONFIG.ORG, x+60, y+h-34, {size:13, color:C.dim, maxW:w/2-60});
+    ctx.save(); ctx.strokeStyle = 'rgba(238,246,255,.5)'; ctx.lineWidth = 1; line(x+w-380, y+h-80, x+w-60, y+h-80); ctx.restore();
+    gradText(CONFIG.DEVELOPER, x+w-220, y+h-90, 24, {cols:[C.cyan, C.mag], glow:10});
+    txt('ผู้พัฒนา · Developer', x+w-220, y+h-56, {size:13, align:'center', color:C.dim, font:'mono'});
+  },
+  buttons(){
+    const w = Math.min(560, W-80);
+    return [backBtn(), {id:'fbFromCert', x:W/2-w/2, y:H-92, w, h:74, label:'♥  เล่นจบแล้ว! ฝากกำลังใจให้ผู้พัฒนาหน่อย  →', sub:'ใช้มือเลือกดาวและแท็กได้เลย ไม่ต้องพิมพ์', size:20, color:C.mag, on:true, action:() => go('feedback')}];
+  },
+};
+
+// ---------------------------------------------------------------- FEEDBACK
+const FB_KEY = 'calcMuseumFeedback.v1';
+let FB = {hearts:0, list:[]};
+try { FB = Object.assign(FB, JSON.parse(localStorage.getItem(FB_KEY) || '{}')); } catch {}
+const saveFB = () => { try { localStorage.setItem(FB_KEY, JSON.stringify(FB)); } catch {} };
+let GLOBAL = null, pendingHearts = 0, qrDone = false;
+async function postFB(data){
+  if (!CONFIG.FEEDBACK_URL) return false;
+  try { await fetch(CONFIG.FEEDBACK_URL, {method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify(data)}); return true; }
+  catch { return false; }
+}
+async function fetchGlobal(){
+  if (!CONFIG.FEEDBACK_URL) return;
+  try { const r = await fetch(CONFIG.FEEDBACK_URL + (CONFIG.FEEDBACK_URL.includes('?') ? '&' : '?') + 'action=stats'); const j = await r.json(); if (j && typeof j.hearts === 'number'){ GLOBAL = j; } } catch {}
+}
+setInterval(() => { if (pendingHearts > 0){ const n = pendingHearts; pendingHearts = 0; if (GLOBAL) GLOBAL.hearts += n; postFB({type:'heart', count:n, time:new Date().toISOString()}); } }, 8000);
+function setupQR(){
+  if (!CONFIG.FEEDBACK_FORM_URL || qrDone) return;
+  const sc = document.createElement('script'); sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+  sc.onload = () => { try { new window.QRCode($('qrBox'), {text:CONFIG.FEEDBACK_FORM_URL, width:120, height:120, colorDark:'#05050f', colorLight:'#ffffff'}); $('qrWrap').style.display = 'flex'; qrDone = true; } catch {} };
+  document.head.appendChild(sc);
+}
+function downloadCSV(){
+  const rows = [['time','rating','tags','message','stamps']].concat(FB.list.map(f => [f.time, f.rating || '', (f.tags||[]).join('|'), (f.msg||'').replace(/\n/g,' '), f.stamps]));
+  rows.push(['hearts (this device)', FB.hearts]);
+  const csv = '﻿' + rows.map(r => r.map(v => `"${String(v ?? '').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'})); a.download = 'calculus-museum-feedback.csv';
+  document.body.appendChild(a); a.click(); a.remove();
+  toast('ดาวน์โหลดแล้ว', `${FB.list.length} ความคิดเห็น · ♥ ${FB.hearts}`, C.cyan);
+}
+const HEARTS = [];
+function spawnHearts(x, y, n=14){ for (let i=0;i<n;i++) HEARTS.push({x:x+(Math.random()-.5)*90, y, vx:(Math.random()-.5)*2, vy:-1.8-Math.random()*3.6, s:16+Math.random()*28, life:1, c:[C.mag,'#ff8cc6',C.violet,C.cyan][i%4]}); }
+function drawHearts(dt){
+  for (let i=HEARTS.length-1;i>=0;i--){ const h = HEARTS[i]; h.x += h.vx + Math.sin(h.y/28)*.7; h.y += h.vy; h.life -= dt*.42;
+    if (h.life <= 0){ HEARTS.splice(i,1); continue; } ctx.globalAlpha = Math.min(1, h.life*1.4); txt('♥', h.x, h.y, {size:h.s, align:'center', color:h.c, glow:16}); }
+  ctx.globalAlpha = 1;
+}
+function starPath(cx, cy, R, r){ ctx.beginPath(); for (let k=0;k<10;k++){ const a = -Math.PI/2 + k*Math.PI/5, d = k%2 ? r : R; ctx.lineTo(cx + d*Math.cos(a), cy + d*Math.sin(a)); } ctx.closePath(); }
+const FB_TAGS = ['สนุกมาก','เข้าใจแคลคูลัสมากขึ้น','ล้ำมาก!','อยากให้มีภารกิจเพิ่ม','ใช้งานยากนิดหน่อย','ขอบคุณผู้พัฒนา'];
+SCENES.feedback = {
+  needs:'hand',
+  enter(){ this.rating = 0; this.tags = new Set(); $('fbMsg').value = ''; $('fbDom').style.display = 'block'; this.place(); fetchGlobal(); setupQR(); },
+  exit(){ $('fbDom').style.display = 'none'; $('fbMsg').blur(); },
+  L(){ const lx = 24, top = 96, lw = Math.max(560, Math.min(W*.6, W-470)), rx = lx + lw + 20, rw = W - rx - 24; return {lx, lw, rx, rw, top, bot:H-24}; },
+  place(){ const {rx, rw, top} = this.L(), d = $('fbDom'); const L = rx+20+'px', T = top+50+'px', Wd = (rw-40)+'px';
+    if (d.style.left !== L) d.style.left = L; if (d.style.top !== T) d.style.top = T; if (d.style.width !== Wd) d.style.width = Wd; },
+  ys(){ const {top} = this.L(); return {heart:top+92, star:top+266, tag:top+390, send:top+548}; },
+  submit(){
+    const msg = $('fbMsg').value.trim();
+    if (!this.rating && !this.tags.size && !msg){ SND.bad(); toast('ยังไม่ได้เลือกอะไรเลย', 'ให้คะแนนดาว หรือเลือกแท็กสักอันก่อนนะ', C.amber, 2200); return; }
+    const rec = {time:new Date().toISOString(), rating:this.rating, tags:[...this.tags], msg, stamps:stampCount()};
+    FB.list.push(rec); saveFB(); postFB({type:'feedback', ...rec});
+    if (GLOBAL){ GLOBAL.count = (GLOBAL.count||0) + 1; }
+    SND.stamp(); spawnHearts(W/2, H*.75, 40); burst(W/2, H/2, 120);
+    toast('ขอบคุณมาก! 💖', CONFIG.FEEDBACK_URL ? 'ส่งกำลังใจถึงผู้พัฒนาแล้ว' : 'บันทึกกำลังใจไว้ในเครื่องนี้แล้ว', C.mag, 3200);
+    this.rating = 0; this.tags = new Set(); $('fbMsg').value = '';
+  },
+  draw(t){
+    const {lx, lw, rx, rw, top, bot} = this.L(), Y = this.ys(); this.place();
+    titleBar('FEEDBACK  ·  ส่งกำลังใจ', 'ให้กำลังใจผู้พัฒนา');
+    glass(lx, top, lw, bot-top, {accent:C.mag});
+    txt('ประสบการณ์ครั้งนี้เป็นยังไงบ้าง?', lx+30, top+46, {size:26, weight:700, color:'#fff'});
+    txt('ชี้ค้างหรือจีบนิ้วเพื่อเลือก · ส่งได้โดยไม่ต้องพิมพ์', lx+30, top+74, {size:15, color:C.dim});
+    txt('RATING', lx+30, Y.star-14, {size:12, weight:600, color:C.cyan, font:'mono', ls:3});
+    txt('TAGS · เลือกได้หลายข้อ', lx+30, Y.tag-14, {size:12, weight:600, color:C.cyan, font:'mono', ls:2});
+    // right panel
+    glass(rx, top, rw, bot-top);
+    txt('MESSAGE · ข้อความถึงผู้พัฒนา', rx+20, top+34, {size:12, weight:600, color:C.cyan, font:'mono', ls:1});
+    const sy = top + (qrDone ? 360 : 210);
+    const local = FB.list, rated = local.filter(f => f.rating), avg = rated.length ? rated.reduce((a,f) => a+f.rating, 0)/rated.length : 0;
+    const hearts = GLOBAL ? GLOBAL.hearts + pendingHearts : FB.hearts, cnt = GLOBAL ? GLOBAL.count : local.length, av = GLOBAL ? GLOBAL.avg : avg;
+    txt(GLOBAL ? 'STATS · ทุกเครื่อง' : 'STATS · เครื่องนี้', rx+20, sy, {size:12, weight:600, color:C.cyan, font:'mono', ls:2});
+    const bw = (rw-40-30)/4, vs = visitStats();
+    [['♥', hearts, 'หัวใจ', C.mag], ['✉', cnt, 'ความคิดเห็น', C.cyan], ['★', av ? fmt(av,1) : '–', 'คะแนนเฉลี่ย', C.amber], ['👥', vs.visits, 'ผู้เข้าชม', C.violet]].forEach(([ic,v,lab,col],i) => {
+      const x = rx+20 + i*(bw+10); glass(x, sy+12, bw, 92, {brackets:false, border:hexA(col,.4)});
+      txt(ic + ' ' + v, x+bw/2, sy+62, {size:24, weight:700, align:'center', color:col, glow:12, font:'mono', maxW:bw-10});
+      txt(lab, x+bw/2, sy+90, {size:13, align:'center', color:C.dim});
+    });
+    // tag bars (local)
+    const counts = FB_TAGS.map(tg => [tg, local.filter(f => (f.tags||[]).includes(tg)).length]).sort((a,b) => b[1]-a[1]).slice(0,4);
+    const maxC = Math.max(1, ...counts.map(c => c[1])), ty0 = sy + 136;
+    if (ty0 + 4*34 < bot - 90) counts.forEach(([tg,c],i) => {
+      const y = ty0 + i*34;
+      txt(tg, rx+20, y+14, {size:14, color:C.ink, maxW:150});
+      rr(rx+180, y+3, rw-260, 12, 6); ctx.save(); ctx.fillStyle = 'rgba(255,255,255,.07)'; ctx.fill(); ctx.restore();
+      if (c){ rr(rx+180, y+3, Math.max(12,(rw-260)*c/maxC), 12, 6); ctx.save(); const g = ctx.createLinearGradient(rx+180,0,rx+rw-80,0); g.addColorStop(0,C.cyan); g.addColorStop(1,C.mag); ctx.fillStyle = g; ctx.fill(); ctx.restore(); }
+      txt(String(c), rx+rw-24, y+14, {size:14, align:'right', color:C.dim, font:'mono'});
+    });
+    if (!CONFIG.FEEDBACK_URL) txt('* ยังไม่ได้ต่อ Google Sheet — ข้อมูลเก็บในเครื่องนี้', rx+20, bot-82, {size:12, color:'rgba(139,156,196,.7)'});
+    txt('พัฒนาโดย ' + CONFIG.DEVELOPER, lx+lw/2, bot-18, {size:13, align:'center', color:C.dim, font:'mono'});
+    drawHandSkeleton();
+  },
+  buttons(){
+    const {lx, lw, rx, rw, bot} = this.L(), Y = this.ys(), bs = [backBtn()];
+    const hearts = GLOBAL ? GLOBAL.hearts + pendingHearts : FB.hearts;
+    bs.push({id:'heart', x:lx+30, y:Y.heart, w:lw-60, h:130, custom:true, repeat:true,
+      action:() => { FB.hearts++; saveFB(); pendingHearts++; tone(660,0,.12,'sine',.08); tone(990,.06,.16,'sine',.07); spawnHearts(lx+lw/2, Y.heart+60, 12); },
+      draw:b => {
+        const t = performance.now(), pulse = 1 + .08*Math.sin(t/220);
+        ctx.save(); rr(b.x,b.y,b.w,b.h,18);
+        const g = ctx.createLinearGradient(b.x,b.y,b.x+b.w,b.y+b.h); g.addColorStop(0,'rgba(255,79,216,.28)'); g.addColorStop(1,'rgba(139,108,255,.22)');
+        ctx.fillStyle = g; ctx.fill(); ctx.strokeStyle = hexA(C.mag, b.hover ? 1 : .6); ctx.lineWidth = 1.5; if (b.hover){ ctx.shadowColor = C.mag; ctx.shadowBlur = 30; } ctx.stroke(); ctx.restore();
+        txt('♥', b.x+80, b.y+b.h/2+4, {size:72*pulse, align:'center', base:'middle', color:C.mag, glow:30});
+        txt('แตะเพื่อส่งหัวใจ', b.x+150, b.y+56, {size:26, weight:700, color:'#fff'});
+        txt('ชี้ค้างไว้ = ส่งต่อเนื่อง · จีบนิ้ว = ส่งทีละดวง', b.x+150, b.y+86, {size:14, color:C.dim});
+        txt(String(hearts), b.x+b.w-28, b.y+b.h/2+4, {size:46, weight:700, align:'right', base:'middle', color:C.mag, glow:16, font:'mono'});
+      }});
+    const sw = Math.min(96, (lw-60-48)/5);
+    for (let k=1;k<=5;k++) bs.push({id:'star'+k, x:lx+30 + (k-1)*(sw+12), y:Y.star, w:sw, h:84, custom:true,
+      action:() => { this.rating = k; tone(500+k*120,0,.15,'triangle',.08); },
+      draw:b => { const on = k <= this.rating;
+        glass(b.x,b.y,b.w,b.h,{brackets:false, border: b.hover ? C.amber : on ? hexA(C.amber,.6) : null});
+        ctx.save(); starPath(b.x+b.w/2, b.y+b.h/2-6, 24, 10); ctx.fillStyle = on ? C.amber : 'rgba(255,255,255,.08)';
+        if (on){ ctx.shadowColor = C.amber; ctx.shadowBlur = 20; } ctx.fill(); ctx.strokeStyle = hexA(C.amber,.8); ctx.lineWidth = 1.5; ctx.stroke(); ctx.restore();
+        txt(String(k), b.x+b.w/2, b.y+b.h-10, {size:12, align:'center', color:C.dim, font:'mono'}); }});
+    const tw = (lw-60-24)/3;
+    FB_TAGS.forEach((tg,i) => bs.push({id:'tag'+i, x:lx+30 + (i%3)*(tw+12), y:Y.tag + Math.floor(i/3)*70, w:tw, h:58, label:(this.tags.has(tg) ? '✓ ' : '') + tg,
+      on:this.tags.has(tg), size:17, color:C.violet, action:() => { if (this.tags.has(tg)) this.tags.delete(tg); else this.tags.add(tg); }}));
+    bs.push({id:'send', x:lx+30, y:Math.min(Y.send, bot-100), w:lw-60, h:72, label:'ส่งกำลังใจ  →', size:24, color:C.mag, on:true, action:() => this.submit()});
+    bs.push({id:'csv', x:rx+20, y:bot-66, w:Math.min(260, rw-40), h:50, label:'⤓  ดาวน์โหลด CSV (สำหรับครู)', size:14, action:downloadCSV});
+    return bs;
+  },
+};
+
+// ---------------------------------------------------------------- PLAYER SELECT
+SCENES.player = {
+  needs:'hand',
+  enter(){ this.room = PLAYER ? PLAYER.room : null; this.team = PLAYER ? PLAYER.team : null; $('plName').value = PLAYER ? (PLAYER.name || '') : ''; $('plDom').style.display = 'block'; },
+  exit(){ $('plDom').style.display = 'none'; $('plName').blur(); },
+  L(){ const w = Math.min(1100, W-60), x = (W-w)/2, top = 104; return {x, w, top, h:H-top-24}; },
+  draw(t){
+    const {x, w, top, h} = this.L();
+    titleBar('PLAYER  ·  เลือกผู้เล่น', 'ใครกำลังเล่นอยู่?');
+    glass(x, top, w, h, {accent:C.violet});
+    txt('01  เลือกห้อง', x+32, top+46, {size:15, weight:600, color:C.cyan, font:'mono', ls:2});
+    txt('02  เลือกทีม', x+32, top+180, {size:15, weight:600, color:C.cyan, font:'mono', ls:2});
+    txt('03  ตั้งชื่อทีม (ไม่บังคับ · ใช้คีย์บอร์ด)', x+32, top+390, {size:15, weight:600, color:C.cyan, font:'mono', ls:1});
+    const d = $('plDom'), L = x+32+'px', T = top+404+'px', Wd = Math.min(520, w-64)+'px';
+    if (d.style.left !== L) d.style.left = L; if (d.style.top !== T) d.style.top = T; if (d.style.width !== Wd) d.style.width = Wd;
+    if (this.room && this.team){
+      const pts = LB[`${this.room}|${this.team}|${$('plName').value.trim()}`];
+      txt(pts ? `ทีมนี้มีคะแนนสะสมอยู่แล้ว ${pts.points} PTS — เล่นต่อได้เลย` : 'ทีมใหม่ เริ่มที่ 0 คะแนน', x+w-32, top+446, {size:15, align:'right', color:C.dim, maxW:w-600});
+    }
+    drawHandSkeleton();
+  },
+  buttons(){
+    const {x, w, top, h} = this.L(), bs = [];
+    const rooms = CONFIG.ROOMS.concat(['อื่น ๆ']), rw = Math.min(220, (w-64-(rooms.length-1)*14)/rooms.length);
+    rooms.forEach((r,i) => bs.push({id:'room'+i, x:x+32+i*(rw+14), y:top+62, w:rw, h:76, label:r, size:24, color:C.cyan, on:this.room === r, action:() => { this.room = r; }}));
+    const n = CONFIG.TEAMS, per = Math.min(n, 5), tw = (w-64-(per-1)*14)/per;
+    for (let k=1;k<=n;k++){ const i = k-1; bs.push({id:'team'+k, x:x+32+(i%per)*(tw+14), y:top+196+Math.floor(i/per)*84, w:tw, h:70, label:'ทีม ' + k, size:22, color:C.mag, on:this.team === k, action:() => { this.team = k; }}); }
+    const ready = this.room && this.team;
+    bs.push({id:'startP', x:x+32, y:top+h-102, w:w-64-300, h:76, label: ready ? `เริ่มเล่น  ·  ${this.room} ทีม ${this.team}  →` : 'เลือกห้องและทีมก่อน', size:24, color:C.green, on:!!ready, disabled:!ready,
+      action:() => { const name = $('plName').value.trim(); setPlayer({room:this.room, team:this.team, name}); logVisit(PLAYER); SND.win(); toast('พร้อมแล้ว!', playerLabel(PLAYER) + ' · สะสมคะแนนได้เลย', C.green, 2200); go('hub'); }});
+    bs.push({id:'guest', x:x+w-32-286, y:top+h-102, w:286, h:76, label:'เล่นแบบผู้เยี่ยมชม', sub:'ไม่บันทึกคะแนน', size:18, color:C.dim, action:() => { setPlayer(null); logVisit(null); go('hub'); }});
+    return bs;
+  },
+};
+
+// ---------------------------------------------------------------- LEADERBOARD
+let GLB = null;
+async function fetchLB(){
+  if (!CONFIG.FEEDBACK_URL) return;
+  try { const r = await fetch(CONFIG.FEEDBACK_URL + (CONFIG.FEEDBACK_URL.includes('?') ? '&' : '?') + 'action=leaderboard'); const j = await r.json(); if (j && Array.isArray(j.teams)) GLB = j; } catch {}
+}
+function lbData(){
+  const teams = (GLB ? GLB.teams : Object.values(LB)).filter(t => t.points > 0 || (PLAYER && pidOf(t) === pidOf(PLAYER))).slice().sort((a,b) => b.points - a.points);
+  const names = [...new Set(CONFIG.ROOMS.concat(teams.map(t => t.room)))];
+  const rooms = names.map(room => ({room, points: GLB ? ((GLB.rooms.find(r => r.room === room) || {}).points || 0) : teams.filter(t => t.room === room).reduce((a,t) => a+t.points, 0)}));
+  return {src: GLB ? 'global' : 'local', teams, rooms};
+}
+function downloadScoresCSV(){
+  const {teams} = lbData();
+  const rows = [['rank','room','team','name','points','stamps']].concat(teams.map((t,i) => [i+1, t.room, t.team, t.name || '', t.points, t.stamps || 0]));
+  const csv = '﻿' + rows.map(r => r.map(v => `"${String(v ?? '').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'})); a.download = 'calculus-museum-scores.csv';
+  document.body.appendChild(a); a.click(); a.remove(); toast('ดาวน์โหลดแล้ว', `${teams.length} ทีม`, C.cyan);
+}
+const MEDAL = ['#ffd75e', '#d8e2f0', '#e0a070'];
+SCENES.leaderboard = {
+  needs:'hand',
+  enter(){ this.t0 = performance.now(); fetchLB(); fetchGlobal(); clearInterval(this.iv); this.iv = setInterval(fetchLB, 15000); },
+  exit(){ clearInterval(this.iv); },
+  draw(t){
+    const {src, teams, rooms} = lbData(), e = 1 - Math.pow(1 - clamp((t - this.t0)/1400, 0, 1), 3);
+    titleBar('LEADERBOARD  ·  ' + (src === 'global' ? 'ทุกเครื่อง · อัปเดตทุก 15 วินาที' : 'เครื่องนี้'), 'กระดานคะแนนรวม');
+    const top = 100, lw = Math.min(520, W*.36), lx = 24, rx = lx + lw + 20, rw = W - rx - 24 - (TEACHER.on ? 300 : 0), bot = H-24;
+    // rooms
+    glass(lx, top, lw, bot-top, {accent:C.cyan});
+    txt('ROOM BATTLE · คะแนนรวมรายห้อง', lx+24, top+38, {size:13, weight:600, color:C.cyan, font:'mono', ls:2});
+    const maxR = Math.max(1, ...rooms.map(r => r.points)), best = rooms.reduce((a,r) => r.points > a.points ? r : a, {points:0});
+    const bh = Math.min(86, (bot-top-90)/Math.max(1,rooms.length) - 18);
+    rooms.forEach((r,i) => {
+      const y = top + 70 + i*(bh+18), fw = (lw-48)*e*r.points/maxR;
+      txt(r.room, lx+24, y+22, {size:22, weight:700, color:'#fff'});
+      if (best.points > 0 && r.room === best.room) txt('👑', lx+24 + 110, y+22, {size:20});
+      txt(String(Math.round(r.points*e)), lx+lw-24, y+22, {size:22, weight:700, align:'right', color:C.cyan, font:'mono'});
+      rr(lx+24, y+34, lw-48, Math.max(14, bh-40), 8); ctx.save(); ctx.fillStyle = 'rgba(255,255,255,.06)'; ctx.fill(); ctx.restore();
+      if (fw > 2){ rr(lx+24, y+34, fw, Math.max(14, bh-40), 8); ctx.save(); const g = ctx.createLinearGradient(lx+24,0,lx+24+lw-48,0);
+        g.addColorStop(0,C.cyan); g.addColorStop(.5,C.violet); g.addColorStop(1,C.mag); ctx.fillStyle = g; ctx.shadowColor = C.violet; ctx.shadowBlur = 18; ctx.fill(); ctx.restore(); }
+    });
+    // teams
+    glass(rx, top, rw, bot-top, {accent:C.amber});
+    txt('TOP TEAMS · อันดับทีม', rx+24, top+38, {size:13, weight:600, color:C.amber, font:'mono', ls:2});
+    const rowH = Math.min(62, (bot-top-80)/10), show = teams.slice(0, Math.floor((bot-top-80)/rowH));
+    if (!show.length) txt('ยังไม่มีคะแนน — เริ่มเล่นภารกิจแรกกันเลย!', rx+rw/2, top+(bot-top)/2, {size:22, align:'center', color:C.dim});
+    show.forEach((tm,i) => {
+      const y = top + 62 + i*rowH, me = PLAYER && pidOf(tm) === pidOf(PLAYER), slide = clamp(e*1.6 - i*.06, 0, 1);
+      ctx.save(); ctx.globalAlpha = slide; ctx.translate((1-slide)*60, 0);
+      rr(rx+16, y, rw-32, rowH-8, 12); ctx.fillStyle = me ? 'rgba(139,108,255,.22)' : i % 2 ? 'rgba(255,255,255,.03)' : 'rgba(255,255,255,.06)'; ctx.fill();
+      if (me){ ctx.strokeStyle = C.violet; ctx.lineWidth = 1.5; ctx.shadowColor = C.violet; ctx.shadowBlur = 14; ctx.stroke(); }
+      ctx.restore();
+      ctx.save(); ctx.globalAlpha = slide; ctx.translate((1-slide)*60, 0);
+      const cy = y + (rowH-8)/2;
+      if (i < 3){ dot(rx+48, cy, 17, MEDAL[i], 16); txt(String(i+1), rx+48, cy+1, {size:18, weight:700, align:'center', base:'middle', color:'#14102a', font:'mono'}); }
+      else txt(String(i+1), rx+48, cy+1, {size:18, weight:700, align:'center', base:'middle', color:C.dim, font:'mono'});
+      txt(`${tm.room} · ทีม ${tm.team}`, rx+82, cy+7, {size:21, weight:700, color:'#fff'});
+      if (tm.name) txt(tm.name, rx+82 + 190, cy+7, {size:17, color:'#cbbcff', maxW:rw-560});
+      for (let k=0;k<STATIONS.length;k++) dot(rx+rw-250 + k*18, cy, 5, k < (tm.stamps||0) ? C.green : 'rgba(255,255,255,.15)', k < (tm.stamps||0) ? 10 : 0);
+      txt(String(tm.points), rx+rw-36, cy+8, {size:26, weight:700, align:'right', color: i < 3 ? MEDAL[i] : C.ink, font:'mono'});
+      txt('PTS', rx+rw-36, cy+24, {size:10, align:'right', color:C.dim, font:'mono'});
+      ctx.restore();
+    });
+    { const v = visitStats(); txt(`👥 ผู้เข้าชม ${v.visits} ครั้ง · ${v.teams} ทีม   ·   ผ่านภารกิจย่อย +20–30 · แสตมป์ +50`, rx+rw-24, top+38, {size:13, align:'right', color:C.dim}); }
+    drawHandSkeleton();
+  },
+  buttons(){ return [backBtn(), {id:'lbPlayer', x:W-20-280, y:16, w:280, h:62, label:PLAYER ? playerLabel(PLAYER) : 'เลือกทีม', sub:'เปลี่ยนผู้เล่น', size:16, color:C.violet, action:() => go('player')}]; },
+};
+
+// ---------------------------------------------------------------- TEACHER MODE
+const TEACHER = {on:false, dwell:1.0, armReset:0};
+function toggleTeacher(){
+  if (!TEACHER.on && CONFIG.TEACHER_PIN){ let p = null; try { p = prompt('รหัสโหมดครู'); } catch {} if (p !== CONFIG.TEACHER_PIN){ toast('รหัสไม่ถูกต้อง', '', C.red, 1500); return; } }
+  TEACHER.on = !TEACHER.on;
+  toast(TEACHER.on ? 'โหมดครู: เปิด' : 'โหมดครู: ปิด', TEACHER.on ? 'T ปิด · 1–5 ไปภารกิจ · S ผ่านข้อนี้ · L กระดานคะแนน · P ผู้เล่น' : '', C.amber, 2600);
+}
+function teacherSkip(){ if (!SC.cheat) return; CHEAT = true; SC.cheat(); setTimeout(() => { CHEAT = false; }, 900); }
+function teacherButtons(){
+  const x = W-300, w = 280, bs = []; let y = 128; const rowH = Math.min(52, (H-184-90)/13);
+  const add = (id, label, action, o={}) => { bs.push({id:'T-'+id, x, y, w, h:rowH-8, label, size:14, color:C.amber, action, ...o}); y += rowH; };
+  add('skip', '⏭  ผ่านข้อนี้ทันที (S)', teacherSkip, {disabled:!SC.cheat, on:!!SC.cheat});
+  STATIONS.forEach((st,i) => bs.push({id:'T-j'+i, x:x+i*57, y, w:51, h:rowH-8, label:String(i+1), size:16, color:C.cyan, on:SC === SCENES[st.id], action:() => go(st.id)})); y += rowH;
+  add('hub', '⌂  หน้าหลัก', () => go('hub'));
+  add('lb', '🏆  กระดานคะแนน (L)', () => go('leaderboard'));
+  add('player', '👥  ทีมใหม่ / เปลี่ยนผู้เล่น (P)', () => go('player'));
+  add('allst', '★  ให้แสตมป์ครบ (สาธิตใบประกาศ)', () => { STATIONS.forEach(st => stamps[st.id] = true); saveStamps(); toast('ให้แสตมป์ครบแล้ว', 'ไม่นับคะแนน', C.amber, 1800); });
+  add('clrst', '↺  ล้างแสตมป์ผู้เล่นนี้', () => { stamps = {}; saveStamps(); toast('ล้างแสตมป์แล้ว', playerLabel(PLAYER), C.amber, 1800); });
+  add('vol', `🎵  เพลง: ${AUDIO.music ? Math.round(AUDIO.vol*100) + '%' : 'ปิด'} (กดเพื่อปรับ)`, cycleVolume, {color:C.violet});
+  add('sfx', `🔔  เสียงเอฟเฟกต์: ${AUDIO.sfx ? 'เปิด' : 'ปิด'}`, () => { AUDIO.sfx = !AUDIO.sfx; saveAudio(); }, {color:C.violet});
+  add('dwell', `⏱  เวลาชี้ค้าง: ${TEACHER.dwell.toFixed(1)} วินาที`, () => { const L = [0.6, 1.0, 1.5]; TEACHER.dwell = L[(L.indexOf(TEACHER.dwell)+1) % L.length]; });
+  add('csv', '⤓  ดาวน์โหลดคะแนน CSV', downloadScoresCSV);
+  add('clrlb', TEACHER.armReset > 0 ? '⚠  กดอีกครั้งเพื่อยืนยันการล้าง' : '🗑  ล้างคะแนนในเครื่องนี้', () => {
+    if (TEACHER.armReset > 0){ LB = {}; saveLB(); STAMP_STORE = {}; stamps = {}; ls_set(STAMP_KEY, STAMP_STORE); if (PLAYER) setPlayer(PLAYER); TEACHER.armReset = 0; toast('ล้างคะแนนแล้ว', 'เฉพาะข้อมูลในเครื่องนี้ (Google Sheet ไม่ถูกลบ)', C.amber, 2600); }
+    else TEACHER.armReset = 3; }, {color:C.red});
+  return bs;
+}
+function drawTeacherPanel(dt){
+  if (TEACHER.armReset > 0) TEACHER.armReset -= dt;
+  if (!TEACHER.on) return;
+  const x = W-312, y = 92, w = 304, h = Math.min(H-184, 52*13 + 60);
+  glass(x, y, w, h, {border:hexA(C.amber,.7), accent:C.amber});
+  txt('TEACHER MODE', x+18, y+26, {size:13, weight:700, color:C.amber, font:'mono', ls:3});
+  { const v = visitStats(); txt(`👥 ${v.visits} ครั้ง · ${v.teams} ทีม` + (v.src === 'global' ? ` · ${v.devices} เครื่อง` : ''), x+18, y+h-14, {size:13, color:C.dim}); }
+  txt('กด T เพื่อปิด', x+w-18, y+26, {size:12, align:'right', color:C.dim});
+}
+
+// ---------------------------------------------------------------- 1. LIMIT
+const LIM_ROUNDS = [
+  {tex:'f(x) = (x² − 1) / (x − 1)', a:1, f:x=>(x*x-1)/(x-1), L:2, yr:[-1,5], hole:true,
+   choices:[['1',false],['2',true],['ไม่มีลิมิต',false]], why:'ลิมิตซ้าย = ลิมิตขวา = 2 แม้ f(1) จะไม่นิยาม'},
+  {tex:'f(x) = sin x / x', a:0, f:x=>Math.sin(x)/x, L:1, yr:[-.6,1.6], ystep:.5, hole:true,
+   choices:[['0',false],['1',true],['ไม่มีลิมิต',false]], why:'เข้าใกล้ 1 จากทั้งสองฝั่ง — ลิมิตสำคัญที่ใช้พิสูจน์อนุพันธ์ของ sin'},
+  {tex:'f(x) = (√(x + 4) − 2) / x', a:0, f:x=>(Math.sqrt(x+4)-2)/x, L:.25, yr:[0,.5], ystep:.1, hole:true,
+   choices:[['0',false],['0.25',true],['0.5',false]], why:'คูณด้วยสังยุคจะได้ 1/(√(x+4)+2) → 1/4'},
+  {tex:'f(x) = x + 1 (x < 1),  x − 1 (x ≥ 1)', a:1, f:x=> x < 1 ? x+1 : x-1, L:null, yr:[-2,4], jump:true,
+   choices:[['2',false],['0',false],['ไม่มีลิมิต',true]], why:'ลิมิตซ้าย = 2 แต่ลิมิตขวา = 0 ไม่เท่ากัน จึงไม่มีลิมิต'},
+];
+SCENES.limit = {
+  needs:'hand',
+  cheat(){ if (this.done || this.solved) return; const R = LIM_ROUNDS[this.ri]; this.unlocked = true; this.lb = Math.min(this.lb,.001); this.rb = Math.min(this.rb,.001); this.solved = true; this.nextT = 2.5; SND.win(); toast('ครูเฉลย', R.why, C.amber, 2500); },
+  enter(){ this.ri = 0; this.correct = 0; this.done = false; this.newRound(); },
+  newRound(){ this.lb = Infinity; this.rb = Infinity; this.unlocked = false; this.solved = false; this.wrong = new Set(); this.x = null; this.nextT = 0; },
+  plot(){ const R = LIM_ROUNDS[this.ri]; return Plot({x:30, y:96, w:W-420, h:H-250}, [R.a-2.5, R.a+2.5], R.yr); },
+  update(dt, P){
+    if (this.done) return;
+    const R = LIM_ROUNDS[this.ri], p = this.plot();
+    const ptr = P[0];
+    if (ptr && ptr.x >= p.r.x && ptr.x <= p.r.x + p.r.w && ptr.y > p.r.y - 20){
+      this.x = p.mx(ptr.x);
+      const d = this.x - R.a;
+      if (d < 0) this.lb = Math.min(this.lb, -d); else if (d > 0) this.rb = Math.min(this.rb, d);
+    }
+    if (!this.unlocked && this.lb <= .05 && this.rb <= .05){ this.unlocked = true; SND.click(); toast('เข้าใกล้ครบทั้งสองฝั่งแล้ว!', 'ดูตาราง แล้วเลือกคำตอบด้านล่าง', C.cyan, 2200); }
+    if (this.solved){ this.nextT -= dt; if (this.nextT <= 0){ if (this.ri < LIM_ROUNDS.length-1){ this.ri++; this.newRound(); } else { this.done = true; giveStamp('limit'); } } }
+  },
+  draw(t){
+    const R = LIM_ROUNDS[this.ri], p = this.plot();
+    titleBar('โซน 1 · ลิมิต  ·  ข้อ ' + (this.ri+1) + '/' + LIM_ROUNDS.length, 'ไล่ล่าลิมิต', '');
+    drawAxes(p, {ystep: R.ystep || 1});
+    // vertical guide at a
+    glowLine(p.sx(R.a), p.r.y, p.sx(R.a), p.r.y+p.r.h, 'rgba(255,176,32,.45)', 2, 6, [8,8]);
+    txt('x = ' + R.a, p.sx(R.a)+8, p.r.y+22, {size:16, color:C.amber});
+    strokeFn(p, R.f, C.mag, 5, {to:R.a-1e-4});
+    strokeFn(p, R.f, C.mag, 5, {from:R.a+1e-4});
+    if (R.hole){ ctx.save(); ctx.fillStyle = '#0b1030'; ctx.beginPath(); ctx.arc(p.sx(R.a), p.sy(R.L), 9, 0, Math.PI*2); ctx.fill(); ctx.restore(); ring(p.sx(R.a), p.sy(R.L), 9, C.mag, 3); }
+    if (R.jump){ ctx.save(); ctx.fillStyle = '#0b1030'; ctx.beginPath(); ctx.arc(p.sx(1), p.sy(2), 9, 0, Math.PI*2); ctx.fill(); ctx.restore(); ring(p.sx(1), p.sy(2), 9, C.mag, 3); dot(p.sx(1), p.sy(0), 9, C.mag); }
+    // tracker
+    if (this.x !== null && !this.done){
+      const x = clamp(this.x, p.xr[0], p.xr[1]), y = (x === R.a) ? NaN : R.f(x);
+      glowLine(p.sx(x), p.sy(0), p.sx(x), p.r.y + p.r.h, 'rgba(46,242,255,.3)', 1, 0);
+      if (isFinite(y)){
+        glowLine(p.sx(x), p.sy(0), p.sx(x), p.sy(y), 'rgba(46,242,255,.8)', 2, 8, [6,6]);
+        glowLine(p.sx(x), p.sy(y), p.sx(p.xr[0] < 0 && p.xr[1] > 0 ? 0 : p.xr[0]), p.sy(y), 'rgba(57,255,136,.8)', 2, 8, [6,6]);
+        dot(p.sx(x), p.sy(y), 11, C.cyan, 26);
+      }
+      glass(p.r.x + 14, p.r.y + p.r.h - 74, 380, 60);
+      txt(`x = ${fmt(x,3)}   →   f(x) = ${isFinite(y) ? fmt(y,4) : 'ไม่นิยาม!'}`, p.r.x + 30, p.r.y + p.r.h - 36, {size:24, weight:600, color:'#fff'});
+    }
+    // mission bar
+    txt(R.tex, p.r.x + 16, p.r.y + 34, {size:30, weight:600, color:'#fff', glow:12});
+    txt(`เลื่อนมือซ้าย–ขวา ให้ x เข้าใกล้ ${R.a} จากทั้งสองฝั่ง แล้วหา lim f(x) เมื่อ x → ${R.a}`, p.r.x + 16, p.r.y + 64, {size:17, color:C.dim});
+    // side table
+    const tx = W - 376, ty = 96, tw = 360, th = H - 250;
+    glass(tx, ty, tw, th);
+    txt('ตารางค่า (เติมเองเมื่อมือเข้าใกล้)', tx+18, ty+32, {size:16, weight:600, color:C.cyan});
+    txt('จากซ้าย ←', tx+18, ty+62, {size:15, color:this.lb <= .05 ? C.green : C.dim});
+    txt('→ จากขวา', tx+tw-18, ty+62, {size:15, align:'right', color:this.rb <= .05 ? C.green : C.dim});
+    const ds = [1, .5, .1, .05, .01, .001], rowH = Math.min(46, (th-90)/ds.length);
+    ds.forEach((d,i) => {
+      const y = ty + 92 + i*rowH;
+      const showL = this.lb <= d + 1e-9 || (this.unlocked && d < .05), showR = this.rb <= d + 1e-9 || (this.unlocked && d < .05);
+      ctx.save(); ctx.fillStyle = i % 2 ? 'rgba(255,255,255,.03)' : 'rgba(255,255,255,.06)'; ctx.fillRect(tx+10, y-rowH*.62, tw-20, rowH); ctx.restore();
+      const xl = R.a - d, xr = R.a + d;
+      txt(showL ? `${fmt(xl, d<.01?3:2)} → ${fmt(R.f(xl),4)}` : '· · ·', tx+18, y, {size:15, color: showL ? C.ink : 'rgba(138,163,199,.4)'});
+      txt(showR ? `${fmt(xr, d<.01?3:2)} → ${fmt(R.f(xr),4)}` : '· · ·', tx+tw-18, y, {size:15, align:'right', color: showR ? C.ink : 'rgba(138,163,199,.4)'});
+    });
+    meter(tx+18, ty+th-48, (tw-50)/2, 12, this.lb === Infinity ? 0 : 1 - Math.min(1, this.lb/1.5), 'ซ้าย');
+    meter(tx+tw/2+7, ty+th-48, (tw-50)/2, 12, this.rb === Infinity ? 0 : 1 - Math.min(1, this.rb/1.5), 'ขวา');
+    if (this.solved) { glass(W/2-360, H-150, 720, 56, {border:C.green}); txt(R.why, W/2, H-114, {size:19, align:'center', color:C.green, maxW:700}); }
+    if (this.done){
+      glass(W/2-330, H/2-100, 660, 170, {border:C.amber});
+      txt('ผ่านภารกิจลิมิต! 🏅', W/2, H/2-30, {size:44, weight:800, align:'center', color:C.amber, glow:16});
+      txt(`ตอบถูก ${this.correct}/${LIM_ROUNDS.length} ข้อในครั้งแรก`, W/2, H/2+20, {size:22, align:'center'});
+    }
+    drawHandSkeleton();
+  },
+  buttons(){
+    const bs = [backBtn()];
+    if (this.done){ bs.push({id:'again', x:W/2-160, y:H/2+90, w:320, h:62, label:'เล่นอีกครั้ง', action:() => this.enter()}); return bs; }
+    const R = LIM_ROUNDS[this.ri];
+    if (this.unlocked && !this.solved){
+      const bw = Math.min(300, (W-140)/3), y = H - 132;
+      R.choices.forEach(([lab, ok], i) => {
+        const x = W/2 - (3*bw + 40)/2 + i*(bw+20);
+        bs.push({id:`ch${this.ri}-${i}`, x, y, w:bw, h:84, label:'lim = ' + lab, size:26, disabled:this.wrong.has(i), color:C.amber,
+          action:() => {
+            if (ok){ this.solved = true; this.nextT = 4; addScore(this.wrong.size ? 10 : 30, 'limit'); if (!this.wrong.size) this.correct++; SND.win(); burst(W/2, H/2); toast('ถูกต้อง!', R.why, C.green, 3600); }
+            else { this.wrong.add(i); SND.bad(); toast('ยังไม่ใช่', 'ดูค่าในตารางทั้งสองฝั่งอีกครั้ง', C.amber, 2200); }
+          }});
+      });
+    } else if (!this.unlocked){
+      bs.push({id:'skipL', x:W-200, y:16, w:184, h:62, label:'ข้ามข้อ ⟶', size:18, action:() => { this.unlocked = true; this.lb = Math.min(this.lb,.05); this.rb = Math.min(this.rb,.05); }});
+    }
+    return bs;
+  },
+};
+
+// ---------------------------------------------------------------- 2. TANGENT BODY (pose)
+const TAN_F = [
+  {tex:'f(x) = 0.3x²',        f:x=>.3*x*x,             d:x=>.6*x,               dtex:'f′(x) = 0.6x'},
+  {tex:'f(x) = 1.5 sin x',    f:x=>1.5*Math.sin(x),    d:x=>1.5*Math.cos(x),    dtex:'f′(x) = 1.5 cos x'},
+  {tex:'f(x) = 0.1x³ − x',    f:x=>.1*x**3 - x,        d:x=>.3*x*x - 1,         dtex:'f′(x) = 0.3x² − 1'},
+  {tex:'f(x) = e^(x/2) − 2',  f:x=>Math.exp(x/2) - 2,  d:x=>.5*Math.exp(x/2),   dtex:'f′(x) = ½e^(x/2)'},
+  {tex:'f(x) = 2 − 0.25x²',   f:x=>2 - .25*x*x,        d:x=>-.5*x,              dtex:'f′(x) = −0.5x'},
+  {tex:'f(x) = 3/(1+x²) − 1', f:x=>3/(1+x*x) - 1,      d:x=>-6*x/((1+x*x)**2),  dtex:'f′(x) = −6x/(1+x²)²'},
+];
+SCENES.tangent = {
+  needs:'pose', GOAL:5,
+  cheat(){ if (!this.done && this.phase === 'play'){ this.hold = 6; this.forceOk = true; } },
+  enter(){ this.fi = -1; this.ok = 0; this.hint = false; this.done = false; this.newRound(); },
+  plot(){ const yr = 5*H/W; return Plot({x:0, y:0, w:W, h:H}, [-5,5], [-yr,yr]); },
+  newRound(){
+    let fi; do { fi = Math.floor(Math.random()*TAN_F.length); } while (fi === this.fi);
+    const F = TAN_F[fi], yr = 5*H/W, cands = [];
+    for (let x=-3; x<=3.001; x+=.5){ const y = F.f(x), m = F.d(x); if (isFinite(y) && Math.abs(m) <= 2.2 && Math.abs(y) <= yr-.5) cands.push(+x.toFixed(1)); }
+    this.fi = fi; this.x0 = cands.length ? cands[Math.floor(Math.random()*cands.length)] : 0;
+    this.hold = 0; this.phase = 'play'; this.hint = false; this.armM = null; this.close = 0; this.isOk = false;
+  },
+  arm(){
+    const now = performance.now();
+    if (POSE.arm && now - POSE.armSeen < 500) return POSE.arm;
+    if (MOUSE.dragA && MOUSE.dragB && dist(MOUSE.dragA, MOUSE.dragB) > 20) return {a:MOUSE.dragA, b:MOUSE.dragB};
+    return null;
+  },
+  update(dt){
+    if (this.done) return;
+    const F = TAN_F[this.fi], arm = this.arm(), p = this.plot();
+    this.isOk = false; this.close = 0; this.armM = null;
+    if (arm){
+      let [a,b] = [arm.a, arm.b]; if (b[0] < a[0]) [a,b] = [b,a];
+      const dx = b[0]-a[0], dy = -(b[1]-a[1]);
+      const ang = Math.atan2(dy, Math.max(dx,1e-6))*180/Math.PI, tgt = Math.atan(F.d(this.x0))*180/Math.PI;
+      let diff = Math.abs(ang - tgt); diff = Math.min(diff, 180-diff);
+      this.armM = dx > 1e-6 ? dy/dx : Infinity; this.armAng = ang;
+      this.isOk = diff <= 8; this.close = Math.max(0, 1 - diff/45);
+    }
+    if (this.phase === 'play'){
+      if (this.forceOk){ this.isOk = true; this.forceOk = false; }
+      this.hold = this.isOk ? this.hold + dt : Math.max(0, this.hold - dt*2);
+      if (this.hold >= 1.2){
+        this.phase = 'reveal'; this.revealT = 3.2; this.ok++; addScore(20, 'tangent'); SND.win(); burst(p.sx(this.x0), p.sy(F.f(this.x0)));
+        toast(`เยี่ยม! ${this.ok}/${this.GOAL}`, `${F.dtex} → f′(${this.x0}) = ${fmt(F.d(this.x0))} · แขนคุณ ${fmt(this.armM)}`, C.green);
+        if (this.ok >= this.GOAL){ this.done = true; giveStamp('tangent'); }
+      }
+    } else { this.revealT -= dt; if (this.revealT <= 0 && !this.done) this.newRound(); }
+  },
+  draw(t){
+    const F = TAN_F[this.fi], p = this.plot();
+    drawAxes(p, {panel:false});
+    strokeFn(p, F.f, C.mag, 5);
+    const x0 = this.x0, y0 = F.f(x0), m = F.d(x0);
+    const tl = (col, dash, w) => glowLine(p.sx(-7), p.sy(y0 + m*(-7-x0)), p.sx(7), p.sy(y0 + m*(7-x0)), col, w, 16, dash);
+    if (this.phase === 'reveal') tl(C.green, null, 5); else if (this.hint) tl('rgba(255,255,255,.55)', [14,12], 3);
+    drawPoseSkeleton();
+    const arm = this.arm();
+    if (arm){
+      let [a,b] = [arm.a, arm.b]; if (b[0] < a[0]) [a,b] = [b,a];
+      const L = dist(a,b) || 1, ux = (b[0]-a[0])/L, uy = (b[1]-a[1])/L, col = this.isOk ? C.green : this.close > .6 ? '#c8ff5a' : C.cyan;
+      glowLine(a[0]-ux*4000, a[1]-uy*4000, b[0]+ux*4000, b[1]+uy*4000, col, 5, 26);
+      dot(a[0], a[1], 12, '#fff'); dot(b[0], b[1], 12, '#fff');
+    }
+    // target
+    const sx = p.sx(x0), sy = p.sy(y0), pulse = 1 + .25*Math.sin(t/180);
+    glowLine(sx, sy, sx, p.sy(0), 'rgba(255,176,32,.7)', 2, 6, [6,8]);
+    dot(sx, sy, 10*pulse, C.amber, 25); ring(sx, sy, 22*pulse, 'rgba(255,176,32,.6)', 2);
+    if (this.hold > 0 && this.phase === 'play') ring(sx, sy, 38, C.green, 7, Math.min(1, this.hold/1.2));
+    txt('x = ' + x0, sx, p.sy(0) + 40, {size:18, weight:600, align:'center', color:C.amber});
+    // HUD
+    titleBar('โซน 2 · อนุพันธ์ · ใช้ทั้งตัว', 'ร่างกายคือเส้นสัมผัส', '');
+    glass(16, 92, 430, 92);
+    txt(F.tex, 32, 134, {size:30, weight:600, color:'#fff', glow:12});
+    txt('กางแขนให้เป็นเส้นสัมผัสที่ x = ' + x0, 32, 166, {size:18, color:C.dim});
+    glass(W/2-330, H-92, 660, 76);
+    txt('ความชันของแขน', W/2-310, H-62, {size:14, color:C.dim});
+    txt(this.armM === null ? '–' : isFinite(this.armM) ? fmt(this.armM) : '∞', W/2-310, H-30, {size:28, weight:600});
+    txt('มุม', W/2-150, H-62, {size:14, color:C.dim});
+    txt(this.armM === null ? '–' : fmt(this.armAng,0) + '°', W/2-150, H-30, {size:28, weight:600});
+    meter(W/2-40, H-46, 200, 14, this.close, 'ใกล้แค่ไหน');
+    txt(`${this.ok}/${this.GOAL}`, W/2+310, H-34, {size:34, weight:800, align:'right', color:C.green, glow:12});
+    if (this.done){
+      glass(W/2-330, H/2-90, 660, 150, {border:C.amber});
+      txt('ผ่านภารกิจเส้นสัมผัส! 🏅', W/2, H/2-20, {size:42, weight:800, align:'center', color:C.amber, glow:16});
+      txt('มุมของแขน = มุมของเส้นสัมผัส = arctan f′(x)', W/2, H/2+26, {size:21, align:'center'});
+    }
+    if (!AI.pose && AI.poseLoading) txt('กำลังโหลด AI จับท่าทาง…', W/2, H/2+120, {size:20, align:'center', color:C.amber});
+  },
+  buttons(){
+    const bs = [backBtn()];
+    if (this.done){ bs.push({id:'againT', x:W/2-160, y:H/2+80, w:320, h:62, label:'เล่นอีกครั้ง', action:() => this.enter()}); return bs; }
+    bs.push({id:'hintT', x:W-400, y:16, w:180, h:62, label: this.hint ? 'ซ่อนใบ้' : 'ใบ้', on:this.hint, size:20, action:() => { this.hint = !this.hint; }});
+    bs.push({id:'skipT', x:W-206, y:16, w:190, h:62, label:'ข้ามข้อ ⟶', size:20, action:() => { if (this.phase === 'play') this.newRound(); }});
+    return bs;
+  },
+  onKey(k){ if (k === 'h') this.hint = !this.hint; if (k === 'n') this.newRound(); },
+};
+
+// ---------------------------------------------------------------- 3. AIR DRAW (hand)
+const AD_T = [
+  {dtex:'f′(x) = 1',          d:x=>1,               F:x=>x},
+  {dtex:'f′(x) = −0.5',       d:x=>-.5,             F:x=>-.5*x},
+  {dtex:'f′(x) = 0.5x',       d:x=>.5*x,            F:x=>.25*x*x-2},
+  {dtex:'f′(x) = −0.5x',      d:x=>-.5*x,           F:x=>2-.25*x*x},
+  {dtex:'f′(x) = 2cos x',     d:x=>2*Math.cos(x),   F:x=>2*Math.sin(x)},
+  {dtex:'f′(x) = −2sin x',    d:x=>-2*Math.sin(x),  F:x=>2*Math.cos(x)},
+  {dtex:'f′(x) = 0.15x² − 1', d:x=>.15*x*x-1,       F:x=>.05*x**3 - x},
+  {dtex:'f′(x) = 0',          d:x=>0,               F:x=>1},
+];
+const NB = 400, XR = 5, YR = 3, BWd = 2*XR/NB;
+SCENES.airdraw = {
+  needs:'hand', GOAL:3,
+  cheat(){ if (this.done || this.solved || this.mode !== 'chal') return; this.hint = true; this.solved = true; this.score++; this.nextT = 2.5; SND.win();
+    toast(`ครูเฉลย ${this.score}/${this.GOAL}`, 'เส้นประสีส้มด้านบนคือ f(x) ที่ถูกต้อง', C.amber, 2500); if (this.score >= this.GOAL){ this.done = true; giveStamp('airdraw'); } },
+  ys:new Float32Array(NB), sy:new Float32Array(NB), d0:new Float32Array(NB), dd:new Float32Array(NB),
+  enter(){ this.mode = 'chal'; this.score = 0; this.ti = -1; this.done = false; this.openHold = 0; this.newTarget(); },
+  fp(){ return Plot({x:0, y:92, w:W, h:H*.6-92}, [-XR,XR], [-YR,YR]); },
+  dp(){ return Plot({x:0, y:H*.6, w:W, h:H*.4}, [-XR,XR], [-YR,YR]); },
+  clear(){ this.ys.fill(NaN); this.last = null; this.solved = false; },
+  newTarget(){ let t; do { t = Math.floor(Math.random()*AD_T.length); } while (t === this.ti); this.ti = t; this.hint = false; this.clear(); },
+  bin: x => clamp(Math.floor((x+XR)/BWd), 0, NB-1),
+  bx: i => -XR + (i+.5)*BWd,
+  add(x,y){
+    y = clamp(y, -YR-.5, YR+.5); const i = this.bin(x), L = this.last;
+    if (L && Math.abs(i - L.i) < NB/3){ const n = Math.abs(i-L.i); for (let k=0;k<=n;k++){ const j = L.i + Math.sign(i-L.i)*k; this.ys[j] = L.y + (y-L.y)*(n ? k/n : 1); } }
+    else this.ys[i] = y;
+    this.last = {i, y};
+  },
+  compute(){
+    const {ys, sy, d0, dd} = this;
+    for (let i=0;i<NB;i++){ if (isNaN(ys[i])){ sy[i] = NaN; continue; } let s=0,c=0; for (let j=i-4;j<=i+4;j++) if (j>=0 && j<NB && !isNaN(ys[j])){ s+=ys[j]; c++; } sy[i] = c >= 5 ? s/c : NaN; }
+    for (let i=0;i<NB;i++){ const a=i-5, b=i+5; d0[i] = (a>=0 && b<NB && !isNaN(sy[a]) && !isNaN(sy[b]) && !isNaN(sy[i])) ? (sy[b]-sy[a])/(10*BWd) : NaN; }
+    for (let i=0;i<NB;i++){ if (isNaN(d0[i])){ dd[i] = NaN; continue; } let s=0,c=0; for (let j=i-4;j<=i+4;j++) if (j>=0 && j<NB && !isNaN(d0[j])){ s+=d0[j]; c++; } dd[i] = s/c; }
+  },
+  update(dt, P){
+    if (this.done) return;
+    const fp = this.fp(), ptr = P[0];
+    this.ptr = ptr;
+    if (ptr && ptr.pinch && ptr.y > fp.r.y + 4 && ptr.y < fp.r.y + fp.r.h - 4 && navCool <= 0){
+      const x = fp.mx(ptr.x), y = fp.my(ptr.y);
+      if (x >= -XR && x <= XR) this.add(x, y);
+    } else this.last = null;
+    if (ptr && ptr.src === 'hand' && ptr.open){ this.openHold += dt; if (this.openHold >= 1){ this.clear(); SND.swish(); this.openHold = -.8; } }
+    else if (this.openHold > 0) this.openHold = 0; else this.openHold = Math.min(0, this.openHold + dt);
+    this.compute();
+    if (this.mode === 'chal'){
+      const T = AD_T[this.ti]; let n=0, have=0, se=0;
+      for (let i=0;i<NB;i++){ const x = this.bx(i); if (x < -4 || x > 4) continue; n++; if (!isNaN(this.dd[i])){ have++; const e = this.dd[i]-T.d(x); se += e*e; } }
+      this.cov = have/n; this.rms = have ? Math.sqrt(se/have) : NaN;
+      if (!this.solved && this.cov >= .75 && this.rms <= .3 && !(ptr && ptr.pinch)){
+        this.solved = true; this.score++; this.nextT = 3.6; addScore(30, 'airdraw'); SND.win(); burst(W/2, H*.3);
+        toast(`ถูกต้อง! ${this.score}/${this.GOAL}`, 'วาดสูงหรือต่ำแค่ไหนก็ได้ เพราะ f(x) + C มีอนุพันธ์เท่ากัน', C.green);
+        if (this.score >= this.GOAL){ this.done = true; giveStamp('airdraw'); }
+      }
+      if (this.solved && !this.done){ this.nextT -= dt; if (this.nextT <= 0) this.newTarget(); }
+    }
+  },
+  strokeArr(p, arr, color){
+    ctx.save(); ctx.beginPath(); ctx.rect(p.r.x,p.r.y,p.r.w,p.r.h); ctx.clip();
+    ctx.strokeStyle = color; ctx.lineWidth = 5; ctx.shadowColor = color; ctx.shadowBlur = 20; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+    ctx.beginPath(); let pen = false;
+    for (let i=0;i<NB;i++){ const v = arr[i]; if (isNaN(v)){ pen = false; continue; } const X = p.sx(this.bx(i)), Y = p.sy(v); if (!pen){ ctx.moveTo(X,Y); pen = true; } else ctx.lineTo(X,Y); }
+    ctx.stroke(); ctx.restore();
+  },
+  draw(t){
+    const fp = this.fp(), dp = this.dp();
+    drawAxes(fp); drawAxes(dp);
+    txt('f(x) ← จีบนิ้ววาดตรงนี้', 16, fp.r.y + fp.r.h - 14, {size:22, weight:600, color:C.mag, glow:10});
+    txt('f′(x) ← คอมพิวเตอร์คำนวณให้', 16, dp.r.y + dp.r.h - 14, {size:22, weight:600, color:C.cyan, glow:10});
+    glowLine(0, dp.r.y, W, dp.r.y, 'rgba(46,242,255,.6)', 2, 6);
+    if (this.mode === 'chal'){
+      const T = AD_T[this.ti];
+      strokeFn(dp, T.d, 'rgba(255,176,32,.9)', 4, {dash:[14,10], blur:10});
+      if (this.hint || this.solved){
+        let s=0,c=0; for (let i=0;i<NB;i++) if (!isNaN(this.sy[i])){ s += this.sy[i] - T.F(this.bx(i)); c++; }
+        const Cc = c ? s/c : 0; strokeFn(fp, x => T.F(x)+Cc, 'rgba(255,176,32,.85)', 3, {dash:[10,10], blur:10});
+      }
+    }
+    this.strokeArr(fp, this.sy, C.mag);
+    this.strokeArr(dp, this.dd, C.cyan);
+    // tangent link at pointer
+    const ptr = this.ptr;
+    if (ptr){
+      const i = this.bin(fp.mx(ptr.x)), x = this.bx(i), fy = this.sy[i], m = this.dd[i];
+      if (!isNaN(fy) && !isNaN(m)){
+        const Lx = 1.3; glowLine(fp.sx(x-Lx), fp.sy(fy-m*Lx), fp.sx(x+Lx), fp.sy(fy+m*Lx), C.green, 4, 18);
+        dot(fp.sx(x), fp.sy(fy), 7, '#fff', 10);
+        const qy = dp.sy(clamp(m,-YR,YR));
+        glowLine(fp.sx(x), fp.sy(fy), dp.sx(x), qy, 'rgba(57,255,136,.6)', 2, 0, [6,8]);
+        dot(dp.sx(x), qy, 9, C.green, 16);
+        txt('ความชัน = ' + fmt(m), dp.sx(x) + (dp.sx(x) > W-220 ? -16 : 16), qy-12, {size:22, weight:600, align: dp.sx(x) > W-220 ? 'right' : 'left'});
+      }
+      if (this.openHold > 0 && HAND.pts){ const [cx,cy] = HAND.pts[9]; ring(cx, cy, 60, C.red, 6, Math.min(1,this.openHold)); txt('กำลังลบ…', cx, cy-72, {size:18, weight:600, align:'center', color:'#ff9db5'}); }
+    }
+    titleBar('โซน 2 · อนุพันธ์', 'วาดฟังก์ชันกลางอากาศ', '');
+    const px = W - 420;
+    glass(px, H*.6 + 12, 404, 104);
+    if (this.mode === 'chal'){
+      txt('วาด f(x) ที่ทำให้', px+18, H*.6+42, {size:16, color:C.dim});
+      txt(AD_T[this.ti].dtex, px+18, H*.6+78, {size:30, weight:600, color:C.amber, glow:12});
+      txt(`${this.score}/${this.GOAL}`, px+386, H*.6+48, {size:30, weight:800, align:'right', color:C.green, glow:10});
+      txt(`ครอบคลุม ${Math.round((this.cov||0)*100)}% · คลาดเคลื่อน ${fmt(this.rms)}`, px+18, H*.6+104, {size:14, color:C.dim});
+    } else {
+      txt('โหมดอิสระ', px+18, H*.6+44, {size:16, color:C.dim});
+      txt('วาดอะไรก็ได้ แล้วดู f′(x)', px+18, H*.6+80, {size:24, weight:600});
+    }
+    if (this.done){
+      glass(W/2-330, H*.3-80, 660, 150, {border:C.amber});
+      txt('ผ่านภารกิจวาดฟังก์ชัน! 🏅', W/2, H*.3-12, {size:42, weight:800, align:'center', color:C.amber, glow:16});
+      txt('ปฏิยานุพันธ์ของ f′ คือ f(x) + C', W/2, H*.3+34, {size:22, align:'center'});
+    }
+    drawHandSkeleton();
+  },
+  buttons(){
+    const bs = [backBtn()], y = 16;
+    bs.push({id:'modeA', x:W-560, y, w:170, h:62, label: this.mode === 'chal' ? 'โหมด: ภารกิจ' : 'โหมด: อิสระ', size:17,
+      action:() => { this.mode = this.mode === 'chal' ? 'free' : 'chal'; this.clear(); }});
+    bs.push({id:'clearA', x:W-382, y, w:110, h:62, label:'ลบ', size:18, color:C.red, action:() => { this.clear(); SND.swish(); }});
+    if (this.mode === 'chal'){
+      bs.push({id:'hintA', x:W-264, y, w:110, h:62, label:'เฉลย', on:this.hint, size:18, action:() => { this.hint = !this.hint; }});
+      bs.push({id:'nextA', x:W-146, y, w:130, h:62, label:'ข้อใหม่', size:18, action:() => this.newTarget()});
+    }
+    if (this.done) bs.push({id:'againA', x:W/2-160, y:H*.3+90, w:320, h:62, label:'เล่นอีกครั้ง', action:() => this.enter()});
+    return bs;
+  },
+  onKey(k){ if (k === 'c') this.clear(); if (k === 'h') this.hint = !this.hint; if (k === 'n') this.newTarget(); },
+};
+
+// ---------------------------------------------------------------- 4. RIEMANN
+const RM_R = [
+  {tex:'f(x) = 0.25x² + 0.5', f:x=>.25*x*x+.5, a:0, b:3, exact:3.75, etex:'∫₀³ (0.25x² + 0.5) dx = 3.75', acc:.98, maxN:50, ymax:3,
+   goal:'ทำให้แม่นยำ ≥ 98% (ใช้กี่แท่งก็ได้)'},
+  {tex:'f(x) = 0.25x² + 0.5', f:x=>.25*x*x+.5, a:0, b:3, exact:3.75, etex:'∫₀³ (0.25x² + 0.5) dx = 3.75', acc:.995, maxN:12, ymax:3,
+   goal:'แม่นยำ ≥ 99.5% โดยใช้ไม่เกิน 12 แท่ง', tip:'ลองเปลี่ยน "วิธี" ดูสิ'},
+  {tex:'f(x) = 2 sin x', f:x=>2*Math.sin(x), a:0, b:Math.PI, exact:4, etex:'∫₀^π 2 sin x dx = 4', acc:.995, maxN:10, ymax:2.4, ystep:.5,
+   goal:'แม่นยำ ≥ 99.5% โดยใช้ไม่เกิน 10 แท่ง', tip:'วิธีไหนแม่นที่สุดเมื่อแท่งน้อย?'},
+];
+const RM_METHODS = [['left','ขอบซ้าย'],['right','ขอบขวา'],['mid','จุดกึ่งกลาง'],['trap','สี่เหลี่ยมคางหมู']];
+SCENES.riemann = {
+  needs:'hand',
+  cheat(){ if (this.done || this.solved) return; const R = RM_R[this.ri]; this.method = 'mid'; this.n = Math.min(R.maxN, 10); this.solved = true; this.nextT = 2.5; SND.win();
+    toast('ครูเฉลย', R.etex, C.amber, 2500); if (this.ri === RM_R.length-1){ this.done = true; giveStamp('riemann'); } },
+  enter(){ this.ri = 0; this.done = false; this.newRound(); },
+  newRound(){ this.n = 3; this.method = 'left'; this.hold = 0; this.solved = false; this.nextT = 0; this.tRound = 0; },
+  plot(){ const R = RM_R[this.ri]; return Plot({x:30, y:180, w:W-250, h:H-330}, [R.a-.4, R.b+.4], [-.3, R.ymax+.4]); },
+  slider(){ return {x:W-190, y:180, w:160, h:H-330}; },
+  sum(){
+    const R = RM_R[this.ri], h = (R.b-R.a)/this.n; let s = 0;
+    for (let i=0;i<this.n;i++){ const xl = R.a + i*h, xr = xl + h;
+      s += h * (this.method === 'left' ? R.f(xl) : this.method === 'right' ? R.f(xr) : this.method === 'mid' ? R.f((xl+xr)/2) : (R.f(xl)+R.f(xr))/2); }
+    return s;
+  },
+  update(dt, P){
+    if (this.done) return;
+    const R = RM_R[this.ri], sl = this.slider(); this.tRound += dt;
+    for (const p of P){ if (p.x >= sl.x-30 && p.x <= sl.x+sl.w+30 && p.y >= sl.y-20 && p.y <= sl.y+sl.h+20){
+      const f = 1 - clamp((p.y - sl.y)/sl.h, 0, 1); this.n = Math.max(1, Math.round(1 + f*(R.maxN-1))); } }
+    this.S = this.sum(); this.acc = 1 - Math.abs(this.S - R.exact)/R.exact;
+    const ok = this.acc >= R.acc && this.n <= R.maxN;
+    if (!this.solved){
+      this.hold = ok ? this.hold + dt : 0;
+      if (this.hold >= 1){
+        this.solved = true; this.nextT = 4; addScore(30, 'riemann'); SND.win(); burst(W/2, H/2);
+        toast('สำเร็จ!', `${R.etex} · คุณได้ ${fmt(this.S,4)} ด้วย ${this.n} แท่ง`, C.green, 3800);
+        if (this.ri === RM_R.length-1){ this.done = true; giveStamp('riemann'); }
+      }
+    } else if (!this.done){ this.nextT -= dt; if (this.nextT <= 0){ this.ri++; this.newRound(); } }
+  },
+  draw(t){
+    const R = RM_R[this.ri], p = this.plot(), h = (R.b-R.a)/this.n;
+    titleBar('โซน 3 · อินทิกรัล  ·  ข้อ ' + (this.ri+1) + '/' + RM_R.length, 'ตึกระฟ้ารีมันน์', '');
+    glass(16, 92, W-32, 78);
+    txt(R.tex, 34, 128, {size:28, weight:600, color:'#fff', glow:10});
+    txt(`บน [${fmt(R.a,0)}, ${R.b === Math.PI ? 'π' : fmt(R.b,0)}]  ·  ภารกิจ: ${R.goal}`, 34, 158, {size:18, color:C.amber});
+    drawAxes(p, {ystep: R.ystep || 1});
+    // bars
+    ctx.save(); ctx.beginPath(); ctx.rect(p.r.x,p.r.y,p.r.w,p.r.h); ctx.clip();
+    for (let i=0;i<this.n;i++){
+      const xl = R.a + i*h, xr = xl + h;
+      ctx.beginPath();
+      if (this.method === 'trap'){ ctx.moveTo(p.sx(xl), p.sy(0)); ctx.lineTo(p.sx(xl), p.sy(R.f(xl))); ctx.lineTo(p.sx(xr), p.sy(R.f(xr))); ctx.lineTo(p.sx(xr), p.sy(0)); ctx.closePath(); }
+      else { const v = this.method === 'left' ? R.f(xl) : this.method === 'right' ? R.f(xr) : R.f((xl+xr)/2); ctx.rect(p.sx(xl), p.sy(Math.max(v,0)), p.sx(xr)-p.sx(xl), Math.abs(p.sy(v)-p.sy(0))); }
+      ctx.fillStyle = `hsla(${185 + 40*i/this.n},100%,60%,.28)`; ctx.fill();
+      ctx.strokeStyle = 'rgba(46,242,255,.9)'; ctx.lineWidth = this.n > 30 ? 1 : 2; ctx.shadowColor = C.cyan; ctx.shadowBlur = 8; ctx.stroke();
+      if (this.method === 'mid' && this.n <= 24) dot(p.sx((xl+xr)/2), p.sy(R.f((xl+xr)/2)), 4, C.amber, 8);
+    }
+    ctx.restore();
+    strokeFn(p, R.f, C.mag, 5, {from:R.a-.4, to:R.b+.4});
+    // readout
+    glass(p.r.x+16, p.r.y+12, 420, 112);
+    txt(`จำนวนแท่ง n = ${this.n}` + (this.n > R.maxN ? `  (เกิน ${R.maxN}!)` : ''), p.r.x+32, p.r.y+44, {size:20, weight:600, color: this.n > R.maxN ? C.red : C.ink});
+    txt(`พื้นที่โดยประมาณ = ${fmt(this.S,4)}`, p.r.x+32, p.r.y+76, {size:22, weight:600, color:C.cyan});
+    txt(this.solved ? `ค่าจริง = ${fmt(R.exact,4)}` : 'ค่าจริง = ?', p.r.x+32, p.r.y+108, {size:18, color: this.solved ? C.green : C.dim});
+    meter(p.r.x+460, p.r.y+40, 260, 14, (this.acc - .8)/.2, `ความแม่นยำ ${fmt(Math.max(0,this.acc)*100,2)}%  (ต้อง ≥ ${R.acc*100}%)`);
+    if (this.hold > 0 && !this.solved) ring(p.r.x+760, p.r.y+48, 20, C.green, 5, this.hold);
+    if (R.tip && this.tRound > 8 && !this.solved) txt('💡 ' + R.tip, p.r.x+460, p.r.y+92, {size:18, color:C.amber});
+    // slider
+    const sl = this.slider();
+    glass(sl.x, sl.y, sl.w, sl.h);
+    txt('n', sl.x+sl.w/2, sl.y-12, {size:20, weight:600, align:'center', color:C.cyan});
+    txt('มาก', sl.x+sl.w/2, sl.y+26, {size:14, align:'center', color:C.dim});
+    txt('น้อย', sl.x+sl.w/2, sl.y+sl.h-12, {size:14, align:'center', color:C.dim});
+    const ky = sl.y + sl.h*(1 - (this.n-1)/Math.max(1, R.maxN-1));
+    glowLine(sl.x+sl.w/2, sl.y+40, sl.x+sl.w/2, sl.y+sl.h-34, 'rgba(46,242,255,.35)', 6, 0);
+    dot(sl.x+sl.w/2, clamp(ky, sl.y+40, sl.y+sl.h-34), 22, C.mag, 24);
+    txt(String(this.n), sl.x+sl.w/2, clamp(ky, sl.y+40, sl.y+sl.h-34), {size:18, weight:800, align:'center', base:'middle', color:'#fff'});
+    txt('เลื่อนมือขึ้น–ลงในแถบนี้', sl.x+sl.w/2, sl.y+sl.h+24, {size:13, align:'center', color:C.dim});
+    if (this.done){
+      glass(W/2-340, H/2-90, 680, 150, {border:C.amber});
+      txt('ผ่านภารกิจรีมันน์! 🏅', W/2, H/2-20, {size:42, weight:800, align:'center', color:C.amber, glow:16});
+      txt('เมื่อ n → ∞ ผลรวมรีมันน์ → อินทิกรัลจำกัดเขต', W/2, H/2+26, {size:21, align:'center'});
+    }
+    drawHandSkeleton();
+  },
+  buttons(){
+    const bs = [backBtn()], bw = Math.min(220, (W-300)/4), y = H - 122;
+    RM_METHODS.forEach(([id,lab], i) => bs.push({id:'m-'+id, x:30 + i*(bw+14), y, w:bw, h:72, label:lab, on:this.method === id, size:20,
+      action:() => { this.method = id; }}));
+    if (this.done) bs.push({id:'againR', x:W/2-160, y:H/2+80, w:320, h:62, label:'เล่นอีกครั้ง', action:() => this.enter()});
+    return bs;
+  },
+};
+
+// ---------------------------------------------------------------- 5. SOLID OF REVOLUTION
+function simpson(f,a,b,n=400){ const h=(b-a)/n; let s=f(a)+f(b); for (let i=1;i<n;i++) s += f(a+i*h)*(i%2?4:2); return s*h/3; }
+const SO_R = [
+  {name:'กรวย', tex:'f(x) = 0.5x', f:x=>.5*x, a:0, b:3, vtex:'V = π∫₀³ (0.5x)² dx = 2.25π'},
+  {name:'ทรงกลม', tex:'f(x) = √(4 − x²)', f:x=>Math.sqrt(Math.max(0,4-x*x)), a:-2, b:2, vtex:'V = π∫₋₂² (4 − x²) dx = 32π/3'},
+  {name:'แจกัน', tex:'f(x) = 1 + 0.4 sin(1.5x)', f:x=>1+.4*Math.sin(1.5*x), a:0, b:4, vtex:'V = π∫₀⁴ (1 + 0.4 sin 1.5x)² dx'},
+];
+SO_R.forEach(R => { R.V = Math.PI * simpson(x => R.f(x)**2, R.a, R.b); R.rmax = Math.max(...Array.from({length:101}, (_,i) => R.f(R.a + (R.b-R.a)*i/100))); });
+SCENES.solid = {
+  needs:'hand',
+  cheat(){ if (!this.done && !this.solved){ this.theta = 360; this.hold = 1; this.lockT = 1; } },
+  enter(){ this.si = 0; this.cnt = 0; this.done = false; this.newShape(); },
+  newShape(){ this.theta = 0; this.tilt = 25; this.hold = 0; this.solved = false; },
+  update(dt, P){
+    const ptr = P[0];
+    if (this.lockT > 0) this.lockT -= dt;
+    else if (ptr && ptr.y > 100 && ptr.y < H-110 && !(TEACHER.on && ptr.x > W-320)){
+      this.theta = clamp((ptr.x - W*.12)/(W*.76), 0, 1) * 360;
+      this.tilt = lerp(this.tilt, 8 + clamp((ptr.y - 120)/(H-260), 0, 1)*55, .15);
+    }
+    if (!this.solved && !this.done){
+      this.hold = this.theta >= 355 ? this.hold + dt : 0;
+      if (this.hold >= .6){
+        const R = SO_R[this.si]; this.solved = true; this.cnt++; addScore(20, 'solid'); SND.win(); burst(W*.45, H*.55);
+        toast(`ได้${R.name}แล้ว! ${this.cnt}/${SO_R.length}`, `${R.vtex} ≈ ${fmt(R.V,3)}`, C.green, 3800);
+        if (this.cnt >= SO_R.length){ this.done = true; giveStamp('solid'); }
+      }
+    }
+  },
+  draw(t){
+    const R = SO_R[this.si], th = this.theta*Math.PI/180, al = this.tilt*Math.PI/180, be = -0.45;
+    const span = R.b - R.a + 1, u = Math.min(W*.62/span, H*.27/R.rmax), cx = W*.45, cy = H*.56, xm = (R.a+R.b)/2;
+    const proj = (x, r, ph) => {
+      const y = r*Math.cos(ph), z = r*Math.sin(ph);
+      const y1 = y*Math.cos(al) - z*Math.sin(al), z1 = y*Math.sin(al) + z*Math.cos(al);
+      const xx = (x - xm)*Math.cos(be) + z1*Math.sin(be);
+      return [cx + xx*u, cy - y1*u, (x - xm)*(-Math.sin(be)) + z1*Math.cos(be)];
+    };
+    titleBar('โซน 3 · อินทิกรัล  ·  ทรง ' + (this.si+1) + '/' + SO_R.length, 'หมุนสร้างทรงตัน', '');
+    glass(16, 92, 560, 108);
+    txt(`${R.name}: ${R.tex}`, 34, 132, {size:28, weight:600, color:'#fff', glow:10});
+    txt('เลื่อนมือจากซ้าย → ขวา เพื่อหมุนกราฟรอบแกน x ให้ครบ 360°', 34, 162, {size:17, color:C.dim});
+    txt('เลื่อนขึ้น–ลง = เปลี่ยนมุมมอง', 34, 188, {size:15, color:C.dim});
+    // axis
+    const A = proj(R.a-.8, 0, 0), B = proj(R.b+.8, 0, 0);
+    glowLine(A[0], A[1], B[0], B[1], 'rgba(46,242,255,.7)', 2, 8, [10,8]);
+    txt('แกน x', B[0]+10, B[1]+6, {size:16, color:C.cyan});
+    // surface quads
+    const NX = 36, dph = 10*Math.PI/180, nph = Math.ceil(th/dph), quads = [];
+    for (let k=0;k<nph;k++){
+      const p0 = k*dph, p1 = Math.min(th, (k+1)*dph);
+      for (let i=0;i<NX;i++){
+        const x0 = R.a + (R.b-R.a)*i/NX, x1 = R.a + (R.b-R.a)*(i+1)/NX, r0 = R.f(x0), r1 = R.f(x1);
+        const q = [proj(x0,r0,p0), proj(x1,r1,p0), proj(x1,r1,p1), proj(x0,r0,p1)];
+        const pm = (p0+p1)/2, nz = Math.cos(pm)*Math.sin(al) + Math.sin(pm)*Math.cos(al);
+        quads.push({q, z:(q[0][2]+q[1][2]+q[2][2]+q[3][2])/4, light:.25 + .55*Math.max(0, (nz+1)/2)});
+      }
+    }
+    quads.sort((a,b) => a.z - b.z);
+    ctx.save();
+    for (const Q of quads){
+      ctx.beginPath(); ctx.moveTo(Q.q[0][0],Q.q[0][1]); for (let j=1;j<4;j++) ctx.lineTo(Q.q[j][0],Q.q[j][1]); ctx.closePath();
+      ctx.fillStyle = `hsla(${190 + 110*(1-Q.light)},95%,${30 + 40*Q.light}%,.55)`; ctx.fill();
+      ctx.strokeStyle = 'rgba(160,240,255,.18)'; ctx.lineWidth = 1; ctx.stroke();
+    }
+    ctx.restore();
+    // region being rotated (at phi = theta) + profile curve
+    ctx.save(); ctx.beginPath();
+    let s = proj(R.a, 0, th); ctx.moveTo(s[0], s[1]);
+    for (let i=0;i<=80;i++){ const x = R.a + (R.b-R.a)*i/80; const q = proj(x, R.f(x), th); ctx.lineTo(q[0], q[1]); }
+    s = proj(R.b, 0, th); ctx.lineTo(s[0], s[1]); ctx.closePath();
+    ctx.fillStyle = 'rgba(255,61,242,.28)'; ctx.fill();
+    ctx.strokeStyle = C.mag; ctx.lineWidth = 5; ctx.shadowColor = C.mag; ctx.shadowBlur = 22; ctx.stroke(); ctx.restore();
+    // a disk slice in the middle (for the formula)
+    if (this.theta > 30){
+      const xs = R.a + (R.b-R.a)*.55, rs = R.f(xs);
+      ctx.save(); ctx.beginPath();
+      for (let k=0;k<=48;k++){ const q = proj(xs, rs, Math.min(th, k/48*2*Math.PI)); if (!k) ctx.moveTo(q[0],q[1]); else ctx.lineTo(q[0],q[1]); }
+      ctx.strokeStyle = C.amber; ctx.lineWidth = 3; ctx.shadowColor = C.amber; ctx.shadowBlur = 14; ctx.stroke(); ctx.restore();
+      const q = proj(xs, rs, 0); txt('แผ่นจาน πr²·Δx', q[0]+12, q[1]-12, {size:16, color:C.amber});
+    }
+    // readout
+    const rx = W - 400, ry = 92;
+    glass(rx, ry, 384, 210);
+    txt('มุมที่หมุน', rx+18, ry+30, {size:15, color:C.dim});
+    txt(fmt(this.theta,0) + '°', rx+18, ry+72, {size:40, weight:800, color:C.mag, glow:14});
+    ring(rx+320, ry+56, 34, 'rgba(255,255,255,.15)', 6, 1); ring(rx+320, ry+56, 34, C.mag, 6, this.theta/360);
+    txt('V = π ∫ₐᵇ [f(x)]² dx', rx+18, ry+120, {size:22, weight:600, color:C.cyan});
+    txt(`ปริมาตรที่กวาดได้ ≈ ${fmt(R.V*this.theta/360, 3)}`, rx+18, ry+156, {size:19});
+    txt(this.solved ? `ปริมาตรเต็ม = ${fmt(R.V,3)}` : 'หมุนให้ครบ 360° เพื่อเฉลย', rx+18, ry+188, {size:16, color: this.solved ? C.green : C.dim});
+    if (this.done){
+      glass(W/2-340, H-260, 680, 130, {border:C.amber});
+      txt('ผ่านภารกิจทรงตัน! 🏅', W/2, H-200, {size:40, weight:800, align:'center', color:C.amber, glow:16});
+      txt('ทรงตัน = ผลรวมของแผ่นจานบาง ๆ จำนวนอนันต์', W/2, H-158, {size:20, align:'center'});
+    }
+    drawHandSkeleton();
+  },
+  buttons(){
+    const bs = [backBtn()];
+    bs.push({id:'nextS', x:W-236, y:H-96, w:220, h:72, label: this.solved ? 'ทรงถัดไป ⟶' : 'ข้ามทรงนี้', size:20, color: this.solved ? C.green : C.cyan,
+      action:() => { this.si = (this.si+1) % SO_R.length; this.newShape(); }});
+    return bs;
+  },
+};
+
+// ================================================================
+//  MAIN LOOP
+// ================================================================
+let last = performance.now();
+function frame(now){
+  const dt = Math.min(.1, (now-last)/1000); last = now;
+  if (SC){
+    detect();
+    const P = getPointers(now);
+    navCool = Math.max(0, navCool - dt);
+    processButtons(dt, P);
+    if (SC.update) SC.update(dt, P);
+    HAND.pinchStart = false; MOUSE.start = false;
+    drawBG(now);
+    SC.draw(now);
+    drawTeacherPanel(dt);
+    drawButtons(now);
+    drawPointers(P, now);
+    drawPops(dt);
+    drawTrans(dt);
+  } else drawSpace(now);
+  drawParts(dt);
+  drawHearts(dt);
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+$('goBtn').onclick = () => {
+  try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); AC.resume && AC.resume(); } catch {}
+  if (AUDIO.music) startMusic();
+  $('startOv').style.display = 'none';
+  go('player');
+  startCamera();
+};
+addEventListener('keydown', e => {
+  if (e.target && (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT')){ if (e.key === 'Escape') e.target.blur(); return; }
+  const k = e.key.toLowerCase();
+  if (k === 'f'){ if (!document.fullscreenElement) document.documentElement.requestFullscreen?.().catch(()=>{}); else document.exitFullscreen?.(); return; }
+  if (!SC) return;
+  if (k === 'escape'){ go('hub'); return; }
+  if (k === 'b'){ cycleBG(); return; }
+  if (k === 't'){ toggleTeacher(); return; }
+  if (k === 'm'){ toggleMusic(); return; }
+  if (TEACHER.on){
+    if (k >= '1' && k <= '5'){ go(STATIONS[+k-1].id); return; }
+    if (k === 's'){ teacherSkip(); return; }
+    if (k === 'l'){ go('leaderboard'); return; }
+    if (k === 'p'){ go('player'); return; }
+  }
+  if (SC.onKey) SC.onKey(k);
+});
+</script>
+</body>
+</html>
