@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>บัตรคำมีชีวิต AR | Learn with Saharat</title>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600;800&family=Sarabun:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+<style>
+  :root{
+    --bg:#0b1020; --panel:#141b33; --line:#2a3560; --text:#eef2ff; --muted:#9aa6d1;
+    --accent:#ffcc33; --accent2:#4fd1c5; --pink:#ff6b9d;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:radial-gradient(1200px 600px at 50% -10%,#1d2a5c,var(--bg));color:var(--text);
+       font-family:"Sarabun",sans-serif;min-height:100vh}
+  header{padding:18px 16px 8px;text-align:center}
+  h1{font-family:"Kanit",sans-serif;font-weight:800;margin:0;font-size:clamp(24px,5vw,36px);
+     background:linear-gradient(90deg,var(--accent),var(--pink),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{color:var(--muted);margin-top:4px}
+  nav{display:flex;gap:8px;justify-content:center;margin:12px 0}
+  nav button{font-family:"Kanit";font-size:16px;padding:10px 18px;border-radius:999px;border:1px solid var(--line);
+             background:var(--panel);color:var(--text);cursor:pointer}
+  nav button.on{background:var(--accent);color:#1a1300;border-color:var(--accent);font-weight:600}
+  main{max-width:900px;margin:0 auto;padding:0 12px 40px}
+  .view{display:none}.view.on{display:block}
+
+  /* ---------- AR ---------- */
+  #stage{position:relative;border-radius:18px;overflow:hidden;background:#000;border:2px solid var(--line);
+         aspect-ratio:4/3;display:flex;align-items:center;justify-content:center}
+  #stage canvas{width:100%;height:100%;object-fit:cover;display:block}
+  #video{display:none}
+  #startBox{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;
+            text-align:center;padding:20px;background:rgba(11,16,32,.85)}
+  .big{font-family:"Kanit";font-size:20px;padding:14px 28px;border-radius:14px;border:0;background:var(--accent);
+       color:#1a1300;font-weight:600;cursor:pointer}
+  #hint{position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.55);padding:6px 14px;
+        border-radius:999px;font-size:14px;color:#fff;white-space:nowrap}
+  #info{margin-top:12px;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;
+        min-height:120px;transition:.3s}
+  #info .w{font-family:"Kanit";font-size:34px;font-weight:800;color:var(--accent)}
+  #info .tag{display:inline-block;font-size:13px;padding:2px 10px;border-radius:999px;background:var(--accent2);color:#03201d;
+             margin-left:8px;vertical-align:middle;font-family:"Kanit"}
+  #info .row{margin-top:6px;line-height:1.6}
+  #info .lab{color:var(--muted)}
+  .actions{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap}
+  .actions button{font-family:"Kanit";font-size:15px;padding:8px 14px;border-radius:10px;border:1px solid var(--line);
+                  background:#1c2546;color:var(--text);cursor:pointer}
+  #found{margin-top:10px;color:var(--muted);font-size:14px}
+  #found span{display:inline-block;margin:2px;padding:2px 8px;border-radius:8px;background:#1c2546}
+  #found span.got{background:var(--accent);color:#1a1300}
+
+  /* ---------- Print ---------- */
+  .tip{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 16px;margin-bottom:12px;color:var(--muted)}
+  #sheet{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+  .card{background:#fff;color:#111;border-radius:16px;padding:14px;text-align:center;border:3px dashed #bbb;
+        display:flex;flex-direction:column;align-items:center;justify-content:space-between;min-height:300px;page-break-inside:avoid}
+  .card .cw{font-family:"Kanit";font-size:30px;font-weight:800;line-height:1.2}
+  .card .ct{font-family:"Kanit";font-size:13px;color:#666}
+  .card img{width:150px;height:150px;image-rendering:pixelated}
+  .card .cs{font-size:12px;color:#888}
+
+  @media print{
+    body{background:#fff}
+    header,nav,.tip,#viewAR{display:none!important}
+    #viewPrint{display:block!important}
+    main{max-width:none;padding:0}
+    #sheet{gap:6mm}
+    .card{min-height:120mm;border:2px dashed #999}
+    .card img{width:55mm;height:55mm}
+    @page{size:A4;margin:10mm}
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>✨ บัตรคำมีชีวิต AR ✨</h1>
+  <div class="sub">ส่องกล้องที่บัตรคำ แล้วดูคำโผล่ออกมา พร้อมเสียงอ่าน</div>
+</header>
+<nav>
+  <button id="tabAR" class="on">📷 สแกน AR</button>
+  <button id="tabPrint">🖨️ พิมพ์บัตรคำ</button>
+</nav>
+
+<main>
+  <!-- ===== โหมด AR ===== -->
+  <section id="viewAR" class="view on">
+    <div id="stage">
+      <video id="video" playsinline muted></video>
+      <canvas id="cv"></canvas>
+      <div id="hint" style="display:none">ส่องกล้องไปที่ QR บนบัตรคำ</div>
+      <div id="startBox">
+        <div style="font-size:60px">🐘📇</div>
+        <div style="font-family:Kanit;font-size:20px">พร้อมแล้ว กดเริ่มเพื่อเปิดกล้อง</div>
+        <button class="big" id="startBtn">เริ่มสแกน</button>
+        <div id="err" style="color:#ff9b9b;font-size:14px"></div>
+      </div>
+    </div>
+
+    <div id="info">
+      <div style="color:var(--muted)">ยังไม่พบบัตรคำ ลองส่องกล้องไปที่บัตร</div>
+    </div>
+    <div id="found"></div>
+  </section>
+
+  <!-- ===== โหมดพิมพ์ ===== -->
+  <section id="viewPrint" class="view">
+    <div class="tip">
+      พิมพ์บนกระดาษ A4 (หน้าละ 4 ใบ) แล้วตัดตามเส้นประ · แก้คำได้ที่ตัวแปร <b>CARDS</b> ในไฟล์นี้
+      <div class="actions"><button onclick="window.print()">🖨️ พิมพ์เลย</button></div>
+    </div>
+    <div id="sheet"></div>
+  </section>
+</main>
+
+<script>
+/* =====================================================
+   ข้อมูลบัตรคำ  — ครูภาษาไทยแก้/เพิ่มได้ตรงนี้
+   id     : รหัสบัตร (ห้ามซ้ำ)
+   word   : คำ/สำนวน
+   type   : ชนิด (คำนาม, คำกริยา, สำนวน ฯลฯ)
+   read   : คำอ่าน
+   mean   : ความหมาย
+   ex     : ประโยคตัวอย่าง
+   emoji  : อีโมจิที่จะลอยออกมาจากบัตร (ใส่ได้หลายตัว)
+   ===================================================== */
+const CARDS = [
+  {id:"1", word:"ช้าง", type:"คำนาม", read:"ช้าง", mean:"สัตว์บกขนาดใหญ่ มีงวงยาว เป็นสัตว์ประจำชาติไทย",
+   ex:"ช้างใช้งวงหยิบกล้วยกิน", emoji:["🐘"]},
+  {id:"2", word:"ดอกไม้", type:"คำนาม (คำประสม)", read:"ดอก-ไม้", mean:"ส่วนของพืชที่บานออก มีสีและกลิ่น",
+   ex:"แม่ปลูกดอกไม้ไว้หน้าบ้าน", emoji:["🌸","🌼","🌷"]},
+  {id:"3", word:"วิ่ง", type:"คำกริยา", read:"วิ่ง", mean:"ไปข้างหน้าอย่างเร็วด้วยเท้า",
+   ex:"นักเรียนวิ่งแข่งในวันกีฬาสี", emoji:["🏃","💨"]},
+  {id:"4", word:"ฝนตก", type:"ประโยค", read:"ฝน-ตก", mean:"น้ำจากเมฆหล่นลงมาเป็นหยด",
+   ex:"วันนี้ฝนตกหนัก ต้องกางร่ม", emoji:["🌧️","☔"]},
+  {id:"5", word:"ขี่ช้างจับตั๊กแตน", type:"สำนวน", read:"ขี่-ช้าง-จับ-ตั๊ก-กะ-แตน",
+   mean:"ลงทุนมากมาย แต่ได้ผลตอบแทนเพียงเล็กน้อย",
+   ex:"จ้างรถสิบล้อไปขนกล่องใบเดียว เหมือนขี่ช้างจับตั๊กแตน", emoji:["🐘","🦗"]},
+  {id:"6", word:"น้ำขึ้นให้รีบตัก", type:"สุภาษิต", read:"น้ำ-ขึ้น-ให้-รีบ-ตัก",
+   mean:"มีโอกาสดีเมื่อใด ให้รีบทำทันที",
+   ex:"ร้านลดราคาวันเดียว น้ำขึ้นให้รีบตักนะ", emoji:["🌊","🪣"]},
+  {id:"7", word:"ไก่เห็นตีนงู งูเห็นนมไก่", type:"สำนวน", read:"ไก่-เห็น-ตีน-งู-งู-เห็น-นม-ไก่",
+   mean:"ต่างฝ่ายต่างรู้ความลับหรือความไม่ดีของกันและกัน",
+   ex:"สองคนนี้ไม่กล้าฟ้องกัน เพราะไก่เห็นตีนงู งูเห็นนมไก่", emoji:["🐔","🐍"]},
+  {id:"8", word:"เสวย", type:"คำราชาศัพท์", read:"สะ-เหวย", mean:"กิน (ใช้กับพระมหากษัตริย์และพระราชวงศ์)",
+   ex:"พระราชาเสวยพระกระยาหารกลางวัน", emoji:["👑","🍲"]},
+];
+
+const PREFIX = "TCARD:";   // ข้อความใน QR จะเป็น TCARD:1, TCARD:2, ...
+
+/* ---------- Tabs ---------- */
+const $ = s => document.querySelector(s);
+$("#tabAR").onclick = () => show("AR");
+$("#tabPrint").onclick = () => show("Print");
+function show(v){
+  ["AR","Print"].forEach(k=>{
+    $("#tab"+k).classList.toggle("on", k===v);
+    $("#view"+k).classList.toggle("on", k===v);
+  });
+}
+
+/* ---------- Print sheet ---------- */
+function buildSheet(){
+  const sheet = $("#sheet");
+  sheet.innerHTML = "";
+  CARDS.forEach(c=>{
+    let img = "";
+    try{
+      const q = qrcode(0,"M"); q.addData(PREFIX+c.id); q.make();
+      img = `<img src="${q.createDataURL(8,2)}" alt="QR ${c.id}">`;
+    }catch(e){ img = `<div style="color:red">โหลดตัวสร้าง QR ไม่ได้</div>`; }
+    sheet.insertAdjacentHTML("beforeend",
+      `<div class="card"><div class="ct">${c.type}</div><div class="cw">${c.word}</div>${img}
+       <div class="cs">📷 ส่องด้วยแอป “บัตรคำมีชีวิต AR”</div></div>`);
+  });
+}
+buildSheet();
+
+/* ---------- Found list ---------- */
+const got = new Set();
+function renderFound(){
+  $("#found").innerHTML = `เก็บบัตรแล้ว ${got.size}/${CARDS.length} : ` +
+    CARDS.map(c=>`<span class="${got.has(c.id)?'got':''}">${c.word}</span>`).join("");
+}
+renderFound();
+
+/* ---------- Speech ---------- */
+function speak(text){
+  try{
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = "th-TH"; u.rate = 0.9;
+    const th = speechSynthesis.getVoices().find(v=>v.lang && v.lang.startsWith("th"));
+    if(th) u.voice = th;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+
+/* ---------- Info panel ---------- */
+let current = null;
+function showInfo(c){
+  $("#info").innerHTML = `
+    <div><span class="w">${c.word}</span><span class="tag">${c.type}</span></div>
+    <div class="row"><span class="lab">คำอ่าน:</span> ${c.read}</div>
+    <div class="row"><span class="lab">ความหมาย:</span> ${c.mean}</div>
+    <div class="row"><span class="lab">ตัวอย่าง:</span> ${c.ex}</div>
+    <div class="actions">
+      <button onclick="speak(CARDS.find(x=>x.id==='${c.id}').word)">🔊 ฟังคำ</button>
+      <button onclick="(c=>speak(c.word+' หมายถึง '+c.mean))(CARDS.find(x=>x.id==='${c.id}'))">🔊 ฟังความหมาย</button>
+      <button onclick="speak(CARDS.find(x=>x.id==='${c.id}').ex)">🔊 ฟังประโยค</button>
+    </div>`;
+}
+
+/* ---------- AR ---------- */
+const video = $("#video"), cv = $("#cv"), ctx = cv.getContext("2d");
+const scan = document.createElement("canvas"), sctx = scan.getContext("2d", {willReadFrequently:true});
+let pose = null, target = null, lastSeen = 0, frame = 0, particles = [];
+
+$("#startBtn").onclick = async ()=>{
+  try{
+    speak(" "); // ปลดล็อกเสียงบนมือถือ
+    const stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment", width:{ideal:1280}, height:{ideal:960}}, audio:false});
+    video.srcObject = stream; await video.play();
+    $("#startBox").style.display = "none"; $("#hint").style.display = "block";
+    requestAnimationFrame(loop);
+  }catch(e){
+    $("#err").textContent = "เปิดกล้องไม่ได้: ต้องเปิดผ่าน https (เช่น GitHub Pages) และอนุญาตกล้อง";
+  }
+};
+
+function loop(t){
+  requestAnimationFrame(loop);
+  if(video.readyState < 2) return;
+  const W = video.videoWidth, H = video.videoHeight;
+  if(cv.width!==W){ cv.width=W; cv.height=H; }
+  ctx.drawImage(video,0,0,W,H);
+
+  // สแกน QR ทุก 2 เฟรม ด้วยภาพย่อ (เร็วขึ้น)
+  if(frame++ % 2 === 0 && window.jsQR){
+    const k = Math.min(1, 640/W);
+    scan.width = Math.round(W*k); scan.height = Math.round(H*k);
+    sctx.drawImage(video,0,0,scan.width,scan.height);
+    const img = sctx.getImageData(0,0,scan.width,scan.height);
+    const r = jsQR(img.data, img.width, img.height, {inversionAttempts:"dontInvert"});
+    if(r && r.data.startsWith(PREFIX)){
+      const c = CARDS.find(x=>x.id===r.data.slice(PREFIX.length));
+      if(c){
+        const L = r.location, s = 1/k;
+        const tl=L.topLeftCorner, tr=L.topRightCorner, bl=L.bottomLeftCorner, br=L.bottomRightCorner;
+        target = {
+          x:(tl.x+tr.x+bl.x+br.x)/4*s, y:(tl.y+tr.y+bl.y+br.y)/4*s,
+          size:Math.hypot(tr.x-tl.x, tr.y-tl.y)*s,
+          ang:Math.atan2(tr.y-tl.y, tr.x-tl.x)
+        };
+        lastSeen = t;
+        if(!current || current.id!==c.id){
+          current = c; pose = {...target};
+          showInfo(c); speak(c.word);
+          if(!got.has(c.id)){ got.add(c.id); renderFound(); burst(target.x,target.y,target.size); }
+        }
+      }
+    }
+  }
+
+  const visible = current && t - lastSeen < 600;
+  $("#hint").style.display = visible ? "none" : "block";
+  if(visible){
+    // ทำให้ภาพขยับนุ่มนวล
+    for(const key of ["x","y","size","ang"]) pose[key] += (target[key]-pose[key])*0.35;
+    drawAR(current, pose, t);
+  }
+  drawParticles();
+}
+
+function drawAR(c, p, t){
+  const s = p.size;
+  ctx.save();
+  ctx.translate(p.x, p.y); ctx.rotate(p.ang);
+
+  // กรอบเรืองแสงรอบบัตร
+  const glow = 0.6 + 0.4*Math.sin(t/250);
+  ctx.strokeStyle = `rgba(255,204,51,${glow})`; ctx.lineWidth = Math.max(3, s*0.04);
+  ctx.shadowColor = "#ffcc33"; ctx.shadowBlur = 20;
+  roundRect(-s*0.6,-s*0.6,s*1.2,s*1.2,s*0.12); ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // ลำแสงจากบัตรขึ้นไป
+  const g = ctx.createLinearGradient(0,-s*0.6,0,-s*2.2);
+  g.addColorStop(0,"rgba(79,209,197,.45)"); g.addColorStop(1,"rgba(79,209,197,0)");
+  ctx.fillStyle = g;
+  ctx.beginPath(); ctx.moveTo(-s*0.5,-s*0.6); ctx.lineTo(s*0.5,-s*0.6); ctx.lineTo(s*0.9,-s*2.2); ctx.lineTo(-s*0.9,-s*2.2); ctx.fill();
+
+  // อีโมจิลอยเด้งขึ้นมาจากบัตร
+  const n = c.emoji.length, es = s*(n>1?0.75:1.0);
+  ctx.textAlign="center"; ctx.textBaseline="middle";
+  ctx.font = `${es}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`;
+  c.emoji.forEach((e,i)=>{
+    const ox = (i-(n-1)/2)*es*0.95;
+    const oy = -s*1.35 + Math.sin(t/300 + i*1.3)*s*0.12;
+    const rot = Math.sin(t/500 + i)*0.12;
+    ctx.save(); ctx.translate(ox,oy); ctx.rotate(rot); ctx.fillText(e,0,0); ctx.restore();
+  });
+
+  // ป้ายคำใต้บัตร
+  const fs = Math.max(18, s*0.32);
+  ctx.font = `800 ${fs}px Kanit, sans-serif`;
+  const tw = ctx.measureText(c.word).width + fs;
+  ctx.fillStyle = "rgba(11,16,32,.85)";
+  roundRect(-tw/2, s*0.75, tw, fs*1.5, fs*0.4); ctx.fill();
+  ctx.fillStyle = "#ffcc33"; ctx.fillText(c.word, 0, s*0.75+fs*0.78);
+
+  ctx.restore();
+}
+
+function roundRect(x,y,w,h,r){
+  ctx.beginPath(); ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
+}
+
+/* ---------- Sparkles เมื่อเก็บบัตรใหม่ ---------- */
+function burst(x,y,s){
+  const cols=["#ffcc33","#ff6b9d","#4fd1c5","#ffffff"];
+  for(let i=0;i<60;i++){
+    const a=Math.random()*Math.PI*2, v=(0.5+Math.random())*s*0.06;
+    particles.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-s*0.03,life:1,c:cols[i%4],r:2+Math.random()*s*0.03});
+  }
+}
+function drawParticles(){
+  particles = particles.filter(p=>p.life>0);
+  particles.forEach(p=>{
+    p.x+=p.vx; p.y+=p.vy; p.vy+=0.4; p.life-=0.02;
+    ctx.globalAlpha=Math.max(0,p.life); ctx.fillStyle=p.c;
+    ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill();
+  });
+  ctx.globalAlpha=1;
+}
+</script>
+</body>
+</html>
